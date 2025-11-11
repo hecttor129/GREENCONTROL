@@ -1,0 +1,52 @@
+﻿using DAL;
+using ENTITY;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BLL
+{
+    public class SiembraService : ICrudEscritura<Siembra>, ICrudLectura<Siembra>
+    {
+        private readonly SiembraRepository siembraRepository;
+
+        public SiembraService()
+        {
+            siembraRepository = new SiembraRepository();
+        }
+
+        public string Guardar(Siembra entidad)
+        {
+            var response = siembraRepository.Insertar(entidad);
+            return response.Mensaje;
+        }
+
+        public bool Actualizar(Siembra entidad)
+        {
+            var response = siembraRepository.Actualizar(entidad);
+            return response.Estado;
+        }
+
+        public bool Eliminar(Siembra entidad)
+        {
+            var response = siembraRepository.Eliminar(entidad.Id);
+            return response.Estado;
+        }
+
+        public ReadOnlyCollection<Siembra> Consultar()
+        {
+            var response = siembraRepository.ObtenerTodos();
+            var lista = response.Lista ?? new List<Siembra>();
+            return new ReadOnlyCollection<Siembra>(lista);
+        }
+
+        public Siembra ObtenerPorId(string id)
+        {
+            var response = siembraRepository.ObtenerPorId(Convert.ToInt32(id));
+            return response.Entidad;
+        }
+    }
+}
