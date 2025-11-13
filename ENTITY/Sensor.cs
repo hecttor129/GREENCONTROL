@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ENTITY
 {
-    public class Sensor : BaseEntity
+    public class Sensor 
     {
         [Key]
         [Column("ID_SENSOR")]

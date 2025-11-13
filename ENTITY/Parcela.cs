@@ -6,10 +6,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ENTITY
 {
     [Table("PARCELA")]
-    public class Parcela : BaseEntity
+    public class Parcela 
     {
         [Key]
         [Column("id_parcela")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Column("id_usuario")]

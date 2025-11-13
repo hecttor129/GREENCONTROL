@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ENTITY
 {
-    public class Rentabilidad : BaseEntity
+    public class Rentabilidad 
     {
         [Key]
         [Column("ID_RENTABILIDAD")]

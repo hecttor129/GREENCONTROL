@@ -5,10 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ENTITY
 {
     [Table("HISTORIAL")]
-    public class Historial : BaseEntity
+    public class Historial 
     {
         [Key]
         [Column("id_historial")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Column("id_parcela")]
@@ -35,7 +36,6 @@ namespace ENTITY
         [Column("RegistroTareas", TypeName = "CLOB")]
         public string RegistroTareas { get; set; }
 
-        // 🔗 Relación con Parcela
         [ForeignKey("IdParcela")]
         public Parcela Parcela { get; set; }
 

@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ENTITY
 {
-    public class Usuario : BaseEntity
+    public class Usuario 
     {
         [Key]
         [Column("ID_USUARIO")]

@@ -5,10 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ENTITY
 {
     [Table("NOTIFICACIONES")]
-    public class Notificaciones : BaseEntity
+    public class Notificaciones 
     {
         [Key]
         [Column("id_notificaciones")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Column("id_usuario")]

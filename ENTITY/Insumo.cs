@@ -5,10 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ENTITY
 {
     [Table("INSUMO")]
-    public class Insumo : BaseEntity
+    public class Insumo 
     {
         [Key]
         [Column("id_insumo")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Column("id_parcela")]

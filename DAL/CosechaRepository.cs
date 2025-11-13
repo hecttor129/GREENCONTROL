@@ -14,14 +14,10 @@ namespace DAL
         {
             Response<Cosecha> response = new Response<Cosecha>();
 
-            // Primero obtenemos el siguiente ID de la secuencia
             string queryId = "SELECT SEQ_COSECHA.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO COSECHA 
-                (ID_COSECHA, ID_SIEMBRA, FECHACOSECHAREAL, FECHACOSECHAESTIMADA, 
-                 FECHAGERMINACION, FECHAFLORACION, FECHASIEMBRA, PORCENTAJEDESARROLLO, ESTADO) 
-                VALUES 
-                (:Id, :IdSiembra, :FechaCosechaReal, :FechaCosechaEstimada, 
-                 :FechaGerminacion, :FechaFloracion, :FechaSiembra, :PorcentajeDesarrollo, :Estado)";
+            string queryInsert = @"
+                INSERT INTO COSECHA (ID_COSECHA, ID_SIEMBRA, ESTADO, CALIDAD, CANTIDAD)
+                VALUES (:Id, :IdSiembra, :Estado, :Calidad, :Cantidad)";
 
             OracleTransaction transaction = null;
 
@@ -44,22 +40,17 @@ namespace DAL
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
                     command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
-                    command.Parameters.Add(new OracleParameter("FechaCosechaReal", entidad.FechaCosechaReal));
-                    command.Parameters.Add(new OracleParameter("FechaCosechaEstimada",
-                        entidad.FechaCosechaEstimada.HasValue ? (object)entidad.FechaCosechaEstimada.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaGerminacion",
-                        entidad.FechaGerminacion.HasValue ? (object)entidad.FechaGerminacion.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaFloracion",
-                        entidad.FechaFloracion.HasValue ? (object)entidad.FechaFloracion.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra));
-                    command.Parameters.Add(new OracleParameter("PorcentajeDesarrollo",
-                        entidad.PorcentajeDesarrollo.HasValue ? (object)entidad.PorcentajeDesarrollo.Value : DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
+                    command.Parameters.Add(new OracleParameter("Calidad",
+                        string.IsNullOrEmpty(entidad.Calidad) ? (object)DBNull.Value : entidad.Calidad));
+                    command.Parameters.Add(new OracleParameter("Cantidad",
+                        entidad.Cantidad.HasValue ? (object)entidad.Cantidad.Value : DBNull.Value));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
+
                 entidad.Id = nuevoId;
                 response.Estado = true;
                 response.Mensaje = "Cosecha registrada exitosamente";
@@ -82,15 +73,13 @@ namespace DAL
         public Response<Cosecha> Actualizar(Cosecha entidad)
         {
             Response<Cosecha> response = new Response<Cosecha>();
-            string query = @"UPDATE COSECHA SET 
-                ID_SIEMBRA = :IdSiembra,
-                FECHACOSECHAREAL = :FechaCosechaReal,
-                FECHACOSECHAESTIMADA = :FechaCosechaEstimada,
-                FECHAGERMINACION = :FechaGerminacion,
-                FECHAFLORACION = :FechaFloracion,
-                FECHASIEMBRA = :FechaSiembra,
-                PORCENTAJEDESARROLLO = :PorcentajeDesarrollo,
-                ESTADO = :Estado
+
+            string query = @"
+                UPDATE COSECHA SET 
+                    ID_SIEMBRA = :IdSiembra,
+                    ESTADO = :Estado,
+                    CALIDAD = :Calidad,
+                    CANTIDAD = :Cantidad
                 WHERE ID_COSECHA = :Id";
 
             OracleTransaction transaction = null;
@@ -104,23 +93,18 @@ namespace DAL
                 {
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
-                    command.Parameters.Add(new OracleParameter("FechaCosechaReal", entidad.FechaCosechaReal));
-                    command.Parameters.Add(new OracleParameter("FechaCosechaEstimada",
-                        entidad.FechaCosechaEstimada.HasValue ? (object)entidad.FechaCosechaEstimada.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaGerminacion",
-                        entidad.FechaGerminacion.HasValue ? (object)entidad.FechaGerminacion.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaFloracion",
-                        entidad.FechaFloracion.HasValue ? (object)entidad.FechaFloracion.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra));
-                    command.Parameters.Add(new OracleParameter("PorcentajeDesarrollo",
-                        entidad.PorcentajeDesarrollo.HasValue ? (object)entidad.PorcentajeDesarrollo.Value : DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
+                    command.Parameters.Add(new OracleParameter("Calidad",
+                        string.IsNullOrEmpty(entidad.Calidad) ? (object)DBNull.Value : entidad.Calidad));
+                    command.Parameters.Add(new OracleParameter("Cantidad",
+                        entidad.Cantidad.HasValue ? (object)entidad.Cantidad.Value : DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Id", entidad.Id));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
+
                 response.Estado = true;
                 response.Mensaje = "Cosecha actualizada exitosamente";
                 response.Entidad = entidad;
@@ -159,6 +143,7 @@ namespace DAL
                 }
 
                 transaction.Commit();
+
                 response.Estado = true;
                 response.Mensaje = "Cosecha eliminada exitosamente";
             }
@@ -193,11 +178,9 @@ namespace DAL
                     {
                         if (reader.Read())
                         {
-                            Cosecha cosecha = Mapear(reader);
-
                             response.Estado = true;
                             response.Mensaje = "Cosecha encontrada";
-                            response.Entidad = cosecha;
+                            response.Entidad = Mapear(reader);
                         }
                         else
                         {
@@ -223,8 +206,8 @@ namespace DAL
         public Response<Cosecha> ObtenerTodos()
         {
             Response<Cosecha> response = new Response<Cosecha>();
-            List<Cosecha> listaCosechas = new List<Cosecha>();
-            string query = "SELECT * FROM COSECHA ORDER BY FECHACOSECHAREAL DESC";
+            List<Cosecha> lista = new List<Cosecha>();
+            string query = "SELECT * FROM COSECHA ORDER BY ID_COSECHA DESC";
 
             try
             {
@@ -235,17 +218,15 @@ namespace DAL
                     using (OracleDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
-                        {
-                            listaCosechas.Add(Mapear(reader));
-                        }
+                            lista.Add(Mapear(reader));
                     }
                 }
 
                 response.Estado = true;
-                response.Mensaje = listaCosechas.Count > 0
-                    ? $"Se encontraron {listaCosechas.Count} cosechas"
+                response.Lista = lista;
+                response.Mensaje = lista.Count > 0
+                    ? $"Se encontraron {lista.Count} cosechas"
                     : "No hay cosechas registradas";
-                response.Lista = listaCosechas;
             }
             catch (Exception ex)
             {
@@ -260,213 +241,16 @@ namespace DAL
             return response;
         }
 
-        //public Response<Cosecha> ObtenerPorSiembra(int idSiembra)
-        //{
-        //    Response<Cosecha> response = new Response<Cosecha>();
-        //    List<Cosecha> listaCosechas = new List<Cosecha>();
-        //    string query = "SELECT * FROM COSECHA WHERE ID_SIEMBRA = :IdSiembra ORDER BY FECHACOSECHAREAL DESC";
-
-        //    try
-        //    {
-        //        AbrirConexion();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Parameters.Add(new OracleParameter("IdSiembra", idSiembra));
-
-        //            using (OracleDataReader reader = command.ExecuteReader())
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    listaCosechas.Add(Mapear(reader));
-        //                }
-        //            }
-        //        }
-
-        //        response.Estado = true;
-        //        response.Mensaje = listaCosechas.Count > 0
-        //            ? $"Se encontraron {listaCosechas.Count} cosechas para esta siembra"
-        //            : "Esta siembra no tiene cosechas registradas";
-        //        response.Lista = listaCosechas;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al obtener cosechas de la siembra: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
-
-        //public Response<Cosecha> ObtenerActivas()
-        //{
-        //    Response<Cosecha> response = new Response<Cosecha>();
-        //    List<Cosecha> listaCosechas = new List<Cosecha>();
-        //    string query = "SELECT * FROM COSECHA WHERE ESTADO = '1' ORDER BY FECHACOSECHAREAL DESC";
-
-        //    try
-        //    {
-        //        AbrirConexion();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            using (OracleDataReader reader = command.ExecuteReader())
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    listaCosechas.Add(Mapear(reader));
-        //                }
-        //            }
-        //        }
-
-        //        response.Estado = true;
-        //        response.Mensaje = listaCosechas.Count > 0
-        //            ? $"Se encontraron {listaCosechas.Count} cosechas activas"
-        //            : "No hay cosechas activas";
-        //        response.Lista = listaCosechas;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al obtener cosechas activas: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
-
-        //public Response<Cosecha> CambiarEstado(int id, string nuevoEstado)
-        //{
-        //    Response<Cosecha> response = new Response<Cosecha>();
-        //    string query = "UPDATE COSECHA SET ESTADO = :Estado WHERE ID_COSECHA = :Id";
-
-        //    OracleTransaction transaction = null;
-
-        //    try
-        //    {
-        //        // Validar estado
-        //        if (nuevoEstado != "0" && nuevoEstado != "1")
-        //        {
-        //            response.Estado = false;
-        //            response.Mensaje = "Estado inválido. Debe ser '0' (inactivo) o '1' (activo)";
-        //            return response;
-        //        }
-
-        //        AbrirConexion();
-        //        transaction = conexion.BeginTransaction();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Transaction = transaction;
-        //            command.Parameters.Add(new OracleParameter("Estado", nuevoEstado));
-        //            command.Parameters.Add(new OracleParameter("Id", id));
-
-        //            int filasAfectadas = command.ExecuteNonQuery();
-
-        //            if (filasAfectadas > 0)
-        //            {
-        //                transaction.Commit();
-        //                response.Estado = true;
-        //                response.Mensaje = nuevoEstado == "1"
-        //                    ? "Cosecha activada exitosamente"
-        //                    : "Cosecha desactivada exitosamente";
-        //            }
-        //            else
-        //            {
-        //                transaction.Rollback();
-        //                response.Estado = false;
-        //                response.Mensaje = "No se encontró la cosecha con el ID especificado";
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        transaction?.Rollback();
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al cambiar estado de cosecha: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
-
         private Cosecha Mapear(OracleDataReader reader)
         {
             return new Cosecha
             {
                 Id = Convert.ToInt32(reader["ID_COSECHA"]),
                 IdSiembra = Convert.ToInt32(reader["ID_SIEMBRA"]),
-                FechaCosechaReal = Convert.ToDateTime(reader["FECHACOSECHAREAL"]),
-                FechaCosechaEstimada = reader["FECHACOSECHAESTIMADA"] != DBNull.Value
-                    ? Convert.ToDateTime(reader["FECHACOSECHAESTIMADA"])
-                    : (DateTime?)null,
-                FechaGerminacion = reader["FECHAGERMINACION"] != DBNull.Value
-                    ? Convert.ToDateTime(reader["FECHAGERMINACION"])
-                    : (DateTime?)null,
-                FechaFloracion = reader["FECHAFLORACION"] != DBNull.Value
-                    ? Convert.ToDateTime(reader["FECHAFLORACION"])
-                    : (DateTime?)null,
-                FechaSiembra = Convert.ToDateTime(reader["FECHASIEMBRA"]),
-                PorcentajeDesarrollo = reader["PORCENTAJEDESARROLLO"] != DBNull.Value
-                    ? Convert.ToDecimal(reader["PORCENTAJEDESARROLLO"])
-                    : (decimal?)null,
-                Estado = reader["ESTADO"].ToString()
+                Estado = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1",
+                Calidad = reader["CALIDAD"] != DBNull.Value ? reader["CALIDAD"].ToString() : null,
+                Cantidad = reader["CANTIDAD"] != DBNull.Value ? Convert.ToDecimal(reader["CANTIDAD"]) : (decimal?)null
             };
         }
-
-        //public Response<Cosecha> ObtenerPorRangoFechas(DateTime fechaInicio, DateTime fechaFin)
-        //{
-        //    Response<Cosecha> response = new Response<Cosecha>();
-        //    List<Cosecha> listaCosechas = new List<Cosecha>();
-        //    string query = @"SELECT * FROM COSECHA 
-        //        WHERE FECHACOSECHAREAL BETWEEN :FechaInicio AND :FechaFin 
-        //        ORDER BY FECHACOSECHAREAL DESC";
-
-        //    try
-        //    {
-        //        AbrirConexion();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Parameters.Add(new OracleParameter("FechaInicio", fechaInicio));
-        //            command.Parameters.Add(new OracleParameter("FechaFin", fechaFin));
-
-        //            using (OracleDataReader reader = command.ExecuteReader())
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    listaCosechas.Add(Mapear(reader));
-        //                }
-        //            }
-        //        }
-
-        //        response.Estado = true;
-        //        response.Mensaje = listaCosechas.Count > 0
-        //            ? $"Se encontraron {listaCosechas.Count} cosechas en el rango de fechas"
-        //            : "No hay cosechas en el rango de fechas especificado";
-        //        response.Lista = listaCosechas;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al obtener cosechas por rango de fechas: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
     }
 }
