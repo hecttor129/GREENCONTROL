@@ -24,13 +24,13 @@ namespace ENTITY
         public string TipoTarea { get; set; }
 
         [Column("FECHATAREA")]
-        public DateTime? FechaTarea { get; set; }
+        public DateTime FechaTarea { get; set; }
 
         [Column("URGENCIA")]
         public int? Urgencia { get; set; }
 
         [Column("ESTADO")]
-        public string EstadoChar { get; set; } = "0";
+        public string? EstadoChar { get; set; } = "0";
 
         [NotMapped]
         public bool Estado
@@ -40,7 +40,7 @@ namespace ENTITY
         }
 
         [Column("COSTO")]
-        public decimal? Costo { get; set; }
+        public decimal Costo { get; set; }
     }
 
 }

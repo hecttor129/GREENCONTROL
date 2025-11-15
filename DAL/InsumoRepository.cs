@@ -10,7 +10,7 @@ namespace DAL
 {
     public class InsumoRepository : ConexionOracle, IRepository<Insumo>
     {
-       private Insumo Mapear(OracleDataReader reader)
+        private Insumo Mapear(OracleDataReader reader)
         {
             return new Insumo
             {
@@ -18,7 +18,8 @@ namespace DAL
                 IdParcela = Convert.ToInt32(reader["ID_PARCELA"]),
                 Unidad = Convert.ToInt32(reader["UNIDAD"]),
                 Tipo = reader["TIPO"] != DBNull.Value ? reader["TIPO"].ToString() : null,
-                CostoUnitario = Convert.ToSingle(reader["COSTOUNITARIO"])
+                CostoUnitario = Convert.ToSingle(reader["COSTOUNITARIO"]),
+                FechaInsumo = reader["FECHAINSUMO"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAINSUMO"]) : (DateTime?)null
             };
         }
 
@@ -27,8 +28,10 @@ namespace DAL
             Response<Insumo> response = new Response<Insumo>();
 
             string queryId = "SELECT SEQ_INSUMO.NEXTVAL FROM DUAL";
-            string queryInsert = "INSERT INTO INSUMO (ID_INSUMO, ID_PARCELA, UNIDAD, TIPO, COSTOUNITARIO) " +
-                           "VALUES (:Id, :IdParcela, :Unidad, :Tipo, :CostoUnitario)";
+
+            string queryInsert = @"INSERT INTO INSUMO 
+                (ID_INSUMO, ID_PARCELA, UNIDAD, TIPO, COSTOUNITARIO, FECHAINSUMO) 
+                VALUES (:Id, :IdParcela, :Unidad, :Tipo, :CostoUnitario, :FechaInsumo)";
 
             OracleTransaction transaction = null;
 
@@ -47,17 +50,20 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(queryInsert, conexion))
                 {
                     command.Transaction = transaction;
+
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
                     command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("Unidad", entidad.Unidad));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("CostoUnitario", entidad.CostoUnitario));
+                    command.Parameters.Add(new OracleParameter("FechaInsumo", entidad.FechaInsumo ?? (object)DBNull.Value));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
                 entidad.Id = nuevoId;
+
                 response.Estado = true;
                 response.Mensaje = "Insumo registrado exitosamente";
                 response.Entidad = entidad;
@@ -79,9 +85,14 @@ namespace DAL
         public Response<Insumo> Actualizar(Insumo entidad)
         {
             Response<Insumo> response = new Response<Insumo>();
-            string query = "UPDATE INSUMO SET ID_PARCELA = :IdParcela, UNIDAD = :Unidad, " +
-                           "TIPO = :Tipo, COSTOUNITARIO = :CostoUnitario " +
-                           "WHERE ID_INSUMO = :Id";
+
+            string query = @"UPDATE INSUMO SET 
+                    ID_PARCELA = :IdParcela,
+                    UNIDAD = :Unidad,
+                    TIPO = :Tipo,
+                    COSTOUNITARIO = :CostoUnitario,
+                    FECHAINSUMO = :FechaInsumo
+                WHERE ID_INSUMO = :Id";
 
             OracleTransaction transaction = null;
 
@@ -93,10 +104,12 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(query, conexion))
                 {
                     command.Transaction = transaction;
+
                     command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("Unidad", entidad.Unidad));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("CostoUnitario", entidad.CostoUnitario));
+                    command.Parameters.Add(new OracleParameter("FechaInsumo", entidad.FechaInsumo ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Id", entidad.Id));
 
                     command.ExecuteNonQuery();
@@ -104,7 +117,7 @@ namespace DAL
 
                 transaction.Commit();
                 response.Estado = true;
-                response.Mensaje = "Insumo actualizado exitosamente";
+                response.Mensaje = "Insumo actualizado correctamente";
                 response.Entidad = entidad;
             }
             catch (Exception ex)
@@ -240,6 +253,32 @@ namespace DAL
             return response;
         }
 
+        public decimal CalcularCostoTotalInsumos(int idParcela)
+        {
+            const string query = "SELECT NVL(SUM(UNIDAD * COSTOUNITARIO), 0) FROM INSUMO WHERE ID_PARCELA = :IdParcela";
+            decimal costoTotal = 0;
+
+            try
+            {
+                AbrirConexion();
+
+                using (OracleCommand command = new OracleCommand(query, conexion))
+                {
+                    command.Parameters.Add(new OracleParameter("IdParcela", idParcela));
+                    object resultado = command.ExecuteScalar();
+
+                    if (resultado != null && resultado != DBNull.Value)
+                        costoTotal = Convert.ToDecimal(resultado);
+                }
+            }
+            finally
+            {
+                CerrarConexion();
+            }
+
+            return costoTotal;
+        }
+
         //public Response<Insumo> ObtenerPorParcela(int idParcela)
         //{
         //    Response<Insumo> response = new Response<Insumo>();
@@ -324,45 +363,5 @@ namespace DAL
         //    return response;
         //}
 
-        //public Response<Insumo> CalcularCostoTotalParcela(int idParcela)
-        //{
-        //    Response<Insumo> response = new Response<Insumo>();
-        //    string query = "SELECT SUM(UNIDAD * COSTOUNITARIO) AS COSTO_TOTAL FROM INSUMO WHERE ID_PARCELA = :IdParcela";
-
-        //    try
-        //    {
-        //        AbrirConexion();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Parameters.Add(new OracleParameter("IdParcela", idParcela));
-
-        //            object resultado = command.ExecuteScalar();
-
-        //            if (resultado != null && resultado != DBNull.Value)
-        //            {
-        //                float costoTotal = Convert.ToSingle(resultado);
-        //                response.Estado = true;
-        //                response.Mensaje = $"Costo total de insumos: ${costoTotal:N2}";
-        //            }
-        //            else
-        //            {
-        //                response.Estado = true;
-        //                response.Mensaje = "Esta parcela no tiene insumos registrados. Costo total: $0.00";
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al calcular costo total: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
     }
 }

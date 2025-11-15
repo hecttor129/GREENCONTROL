@@ -26,7 +26,6 @@ namespace DAL
                 AbrirConexion();
                 transaction = conexion.BeginTransaction();
 
-                // Obtener el siguiente ID
                 int nuevoId;
                 using (OracleCommand commandId = new OracleCommand(queryId, conexion))
                 {
@@ -34,15 +33,16 @@ namespace DAL
                     nuevoId = Convert.ToInt32(commandId.ExecuteScalar());
                 }
 
-                // Insertar con el ID obtenido
                 using (OracleCommand command = new OracleCommand(queryInsert, conexion))
                 {
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
                     command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
+
                     command.Parameters.Add(new OracleParameter("Calidad",
-                        string.IsNullOrEmpty(entidad.Calidad) ? (object)DBNull.Value : entidad.Calidad));
+                        entidad.Calidad.HasValue ? (object)entidad.Calidad.Value : DBNull.Value));
+
                     command.Parameters.Add(new OracleParameter("Cantidad",
                         entidad.Cantidad.HasValue ? (object)entidad.Cantidad.Value : DBNull.Value));
 
@@ -70,6 +70,7 @@ namespace DAL
             return response;
         }
 
+
         public Response<Cosecha> Actualizar(Cosecha entidad)
         {
             Response<Cosecha> response = new Response<Cosecha>();
@@ -94,8 +95,10 @@ namespace DAL
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
+
                     command.Parameters.Add(new OracleParameter("Calidad",
-                        string.IsNullOrEmpty(entidad.Calidad) ? (object)DBNull.Value : entidad.Calidad));
+                        entidad.Calidad.HasValue ? (object)entidad.Calidad.Value : DBNull.Value));
+
                     command.Parameters.Add(new OracleParameter("Cantidad",
                         entidad.Cantidad.HasValue ? (object)entidad.Cantidad.Value : DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Id", entidad.Id));
@@ -122,6 +125,7 @@ namespace DAL
 
             return response;
         }
+
 
         public Response<Cosecha> Eliminar(int id)
         {
@@ -160,6 +164,7 @@ namespace DAL
 
             return response;
         }
+
 
         public Response<Cosecha> ObtenerPorId(int id)
         {
@@ -203,6 +208,7 @@ namespace DAL
             return response;
         }
 
+
         public Response<Cosecha> ObtenerTodos()
         {
             Response<Cosecha> response = new Response<Cosecha>();
@@ -241,6 +247,7 @@ namespace DAL
             return response;
         }
 
+
         private Cosecha Mapear(OracleDataReader reader)
         {
             return new Cosecha
@@ -248,8 +255,14 @@ namespace DAL
                 Id = Convert.ToInt32(reader["ID_COSECHA"]),
                 IdSiembra = Convert.ToInt32(reader["ID_SIEMBRA"]),
                 Estado = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1",
-                Calidad = reader["CALIDAD"] != DBNull.Value ? reader["CALIDAD"].ToString() : null,
-                Cantidad = reader["CANTIDAD"] != DBNull.Value ? Convert.ToDecimal(reader["CANTIDAD"]) : (decimal?)null
+
+                Calidad = reader["CALIDAD"] != DBNull.Value
+                            ? Convert.ToInt32(reader["CALIDAD"])
+                            : (int?)null,
+
+                Cantidad = reader["CANTIDAD"] != DBNull.Value
+                            ? Convert.ToDecimal(reader["CANTIDAD"])
+                            : (decimal?)null
             };
         }
     }

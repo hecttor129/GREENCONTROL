@@ -21,162 +21,224 @@ namespace BLL
             cultivoRepository = new CultivoRepository();
         }
 
+        //CRUD BASICO
+
         public string Guardar(Siembra entidad)
         {
-            var response = siembraRepository.Insertar(entidad);
-            return response.Mensaje;
-        }
 
+            if (ValidarFechaEstipuladaSiembra(entidad.FechaSiembra))
+            {
+                var response = siembraRepository.Insertar(entidad);
+                return response.Mensaje;
+            }
+            else
+            {
+                return "La fecha de siembra no puede ser anterior a la fecha actual.";
+            }
+
+        }
         public bool Actualizar(Siembra entidad)
         {
             var response = siembraRepository.Actualizar(entidad);
             return response.Estado;
         }
-
         public bool Eliminar(Siembra entidad)
         {
             var response = siembraRepository.Eliminar(entidad.Id);
             return response.Estado;
         }
-
         public ReadOnlyCollection<Siembra> Consultar()
         {
             var response = siembraRepository.ObtenerTodos();
             var lista = response.Lista ?? new List<Siembra>();
             return new ReadOnlyCollection<Siembra>(lista);
         }
-
         public Siembra ObtenerPorId(string id)
         {
             var response = siembraRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
 
-        public DateTime CalcularFechaGerminacionAutomatica(int id)
+        //VALIDACIONES
+
+        private bool ValidarFechaEstipuladaSiembra(DateTime fechaRegistradaPorUsuario)
         {
-            var siembra = siembraRepository.ObtenerPorId(id).Entidad;
-            if (siembra == null)
-                throw new Exception("No se encontró la siembra.");
-
-            var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
-            if (cultivo == null)
-                throw new Exception("No se encontró el cultivo asociado.");
-
-            DateTime fechaBase = siembra.FechaSiembra;
-            double promedioDias = (double)((cultivo.DiasGerminacion_Fecha1 + cultivo.DiasGerminacion_Fecha2) / 2.0);
-
-            return fechaBase.AddDays(promedioDias);
-        }
-
-        public DateTime CalcularFechaFloracionAutomatica(int id)
-        {
-            var siembra = siembraRepository.ObtenerPorId(id).Entidad;
-            if (siembra == null)
-                throw new Exception("No se encontró la siembra.");
-
-            var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
-            if (cultivo == null)
-                throw new Exception("No se encontró el cultivo asociado.");
-
-            DateTime fechaBase = siembra.FechaGerminacion ?? CalcularFechaGerminacionAutomatica(id);
-
-            double promedioDias = (double)((cultivo.DiasFloracion_Fecha1 + cultivo.DiasFloracion_Fecha2) / 2.0);
-
-            return fechaBase.AddDays(promedioDias);
-        }
-
-        public DateTime CalcularFechaCosechaAutomatica(int id)
-        {
-            var siembra = siembraRepository.ObtenerPorId(id).Entidad;
-            if (siembra == null)
-                throw new Exception("No se encontró la siembra.");
-
-            var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
-            if (cultivo == null)
-                throw new Exception("No se encontró el cultivo asociado.");
-
-            DateTime fechaBase = siembra.FechaFloracion ?? CalcularFechaFloracionAutomatica(id);
-
-            double promedioDias = (double)((cultivo.DiasCosecha_Fecha1 + cultivo.DiasCosecha_Fecha2) / 2.0);
-
-            return fechaBase.AddDays(promedioDias);
-        }
-
-        public double CalcularPorcentajeDesarrollo(DateTime fechaSiembra, int duracionCiclo1, int duracionCiclo2, DateTime? fechaCosecha)
-        {
-            DateTime fechaActual = DateTime.Now;
-
-            if (fechaCosecha.HasValue && fechaCosecha.Value <= fechaActual)
+            if (fechaRegistradaPorUsuario < DateTime.Now)
             {
-                return 100;
+                return false;
             }
-
-            double promedioCiclo = (duracionCiclo1 + duracionCiclo2) / 2.0;
-            double diasPasados = (fechaActual - fechaSiembra).TotalDays;
-            double porcentaje = (diasPasados / promedioCiclo) * 100;
-
-            if (porcentaje < 0)
+            else
             {
-                porcentaje = 0;
+                return true;
             }
-            else if (porcentaje > 100)
-            {
-                porcentaje = 100;
-            }
-
-            return porcentaje;
         }
-
-        public bool ConfirmarFechaCosecha(int id)
+        public  bool ActivarSiembra(int id)
         {
             var siembra = siembraRepository.ObtenerPorId(id).Entidad;
             if (siembra == null)
                 return false;
-
-            if (siembra.FechaCosecha != null)
-                return true;
-
-            siembra.FechaCosecha = DateTime.Now;
-
+            siembra.Estado = "Activa";
+            var response = siembraRepository.Actualizar(siembra);
+            return response.Estado;
+        }
+        public bool InactivarSiembra(int id)
+        {
+            var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+            if (siembra == null)
+                return false;
+            siembra.Estado = "Inactiva";
             var response = siembraRepository.Actualizar(siembra);
             return response.Estado;
         }
 
 
-        public bool ConfirmarFechaFloracion(int id)
-        {
-            var siembra = siembraRepository.ObtenerPorId(id).Entidad;
-            if (siembra == null)
-                return false;
+        //FUNCIONALIDADES Y CALCULOS EXTRAS
 
-            if (siembra.FechaFloracion != null)
-                return true;
+        //public DateTime CalcularFechaGerminacionAutomatica(int id)
+        //{
+        //    var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+        //    if (siembra == null)
+        //        throw new Exception("No se encontró la siembra.");
 
-            siembra.FechaFloracion = DateTime.Now;
+        //    var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
+        //    if (cultivo == null)
+        //        throw new Exception("No se encontró el cultivo asociado.");
 
-            siembra.FechaCosecha = CalcularFechaCosechaAutomatica(id);
+        //    DateTime fechaBase = siembra.FechaSiembra;
 
-            var response = siembraRepository.Actualizar(siembra);
-            return response.Estado;
-        }
+        //    double promedioDias = (double)((cultivo.DiasGerminacion_Fecha1 + cultivo.DiasGerminacion_Fecha2) / 2.0);
 
-        public bool ConfirmarFechaGerminacion(int id)
-        {
-            var siembra = siembraRepository.ObtenerPorId(id).Entidad;
-            if (siembra == null)
-                return false;
+        //    return fechaBase.AddDays(promedioDias);
+        //}
+        //public DateTime CalcularFechaFloracionAutomatica(int id)
+        //{
+        //    var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+        //    if (siembra == null)
+        //        throw new Exception("No se encontró la siembra.");
 
-            if (siembra.FechaGerminacion != null)
-                return true;
+        //    var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
+        //    if (cultivo == null)
+        //        throw new Exception("No se encontró el cultivo asociado.");
 
-            siembra.FechaGerminacion = DateTime.Now;
+        //    DateTime fechaBase;
 
-            siembra.FechaFloracion = CalcularFechaFloracionAutomatica(id);
-            siembra.FechaCosecha = CalcularFechaCosechaAutomatica(id);
+        //    if (siembra.FechaGerminacion.HasValue)
+        //    {
+        //        fechaBase = siembra.FechaGerminacion.Value;
+        //    }
+        //    else
+        //    {
+        //        fechaBase = CalcularFechaGerminacionAutomatica(id);
+        //    }
 
-            var response = siembraRepository.Actualizar(siembra);
-            return response.Estado;
-        }
+        //    double promedioDias = (double)((cultivo.DiasFloracion_Fecha1 + cultivo.DiasFloracion_Fecha2) / 2.0);
+
+        //    DateTime fechaFloracion = fechaBase.AddDays(promedioDias);
+
+        //    return fechaFloracion;
+        //}    
+        //public DateTime CalcularFechaCosechaAutomatica(int id)
+        //{
+        //    var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+        //    if (siembra == null)
+        //        throw new Exception("No se encontró la siembra.");
+
+        //    var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
+        //    if (cultivo == null)
+        //        throw new Exception("No se encontró el cultivo asociado.");
+
+        //    DateTime fechaBase;
+
+        //    if (siembra.FechaFloracion.HasValue)
+        //    {
+        //        fechaBase = siembra.FechaFloracion.Value;
+        //    }
+        //    else
+        //    {
+        //        fechaBase = CalcularFechaFloracionAutomatica(id);
+        //    }
+
+        //    double promedioDias = (double)((cultivo.DiasCosecha_Fecha1 + cultivo.DiasCosecha_Fecha2) / 2.0);
+
+        //    DateTime fechaCosecha = fechaBase.AddDays(promedioDias);
+
+        //    return fechaCosecha;
+        //}
+        //public double CalcularPorcentajeDesarrollo(int id)
+        //{
+        //    DateTime fechaActual = DateTime.Now;
+
+        //    var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+        //    if (siembra == null)
+        //        throw new Exception("No se encontró la siembra.");
+
+        //    var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
+        //    if (cultivo == null)
+        //        throw new Exception("No se encontró el cultivo asociado.");
+
+
+        //    double promedioCiclo = (double)((cultivo.DuracionCiclo_Fecha1 + cultivo.DuracionCiclo_Fecha2) / 2.0);
+        //    double diasPasados = (fechaActual - siembra.FechaSiembra).TotalDays;
+        //    double porcentaje = (diasPasados / promedioCiclo) * 100;
+
+        //    if (porcentaje < 0)
+        //    {
+        //        porcentaje = 0;
+        //    }
+        //    else if (porcentaje > 100)
+        //    {
+        //        porcentaje = 100;
+        //    }
+
+        //    return porcentaje;
+        //}
+        //public bool ConfirmarFechaCosecha(int id)
+        //{
+        //    var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+        //    if (siembra == null)
+        //        return false;
+
+        //    if (siembra.FechaCosecha != null)
+        //        return true;
+
+        //    siembra.FechaCosecha = DateTime.Now;
+
+        //    var response = siembraRepository.Actualizar(siembra);
+        //    return response.Estado;
+        //}
+        //public bool ConfirmarFechaFloracion(int id)
+        //{
+        //    var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+        //    if (siembra == null)
+        //        return false;
+
+        //    if (siembra.FechaFloracion != null)
+        //        return true;
+
+        //    siembra.FechaFloracion = DateTime.Now;
+
+        //    siembra.FechaCosecha = CalcularFechaCosechaAutomatica(id);
+
+        //    var response = siembraRepository.Actualizar(siembra);
+        //    return response.Estado;
+        //}
+        //public bool ConfirmarFechaGerminacion(int id)
+        //{
+        //    var siembra = siembraRepository.ObtenerPorId(id).Entidad;
+        //    if (siembra == null)
+        //        return false;
+
+        //    if (siembra.FechaGerminacion != null)
+        //        return true;
+
+        //    siembra.FechaGerminacion = DateTime.Now;
+
+        //    siembra.FechaFloracion = CalcularFechaFloracionAutomatica(id);
+        //    siembra.FechaCosecha = CalcularFechaCosechaAutomatica(id);
+
+        //    var response = siembraRepository.Actualizar(siembra);
+        //    return response.Estado;
+        //}
 
 
 

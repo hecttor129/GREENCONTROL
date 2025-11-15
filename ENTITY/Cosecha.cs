@@ -18,11 +18,10 @@ namespace ENTITY
 
         [Column("ESTADO")]
         [StringLength(1)]
-        public string Estado { get; set; } = "1";
+        public string Estado { get; set; } = "0";
 
         [Column("CALIDAD")]
-        [StringLength(15)]
-        public string? Calidad { get; set; }
+        public int? Calidad { get; set; } = 1;
 
         [Column("CANTIDAD")]
         public decimal? Cantidad { get; set; }

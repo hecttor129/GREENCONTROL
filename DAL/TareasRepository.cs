@@ -10,39 +10,28 @@ namespace DAL
 {
     public class TareasRepository : ConexionOracle, IRepository<Tareas>
     {
-
         private Tareas Mapear(OracleDataReader reader)
         {
+            // Tu entidad tiene FechaTarea y Costo como NO nullables,
+            // por eso aquí convertimos directamente y lanzaremos si está mal la BD.
             return new Tareas
             {
                 Id = Convert.ToInt32(reader["ID_TAREA"]),
                 IdParcela = Convert.ToInt32(reader["ID_PARCELA"]),
-                TipoTarea = reader["TIPOTAREA"] != DBNull.Value
-                    ? reader["TIPOTAREA"].ToString()
-                    : null,
-                FechaTarea = reader["FECHATAREA"] != DBNull.Value
-                    ? Convert.ToDateTime(reader["FECHATAREA"])
-                    : (DateTime?)null,
-                Urgencia = reader["URGENCIA"] != DBNull.Value
-                    ? Convert.ToInt32(reader["URGENCIA"])
-                    : (int?)null,
-                EstadoChar = reader["ESTADO"] != DBNull.Value
-                    ? reader["ESTADO"].ToString()
-                    : "0",
-                Costo = reader["COSTO"] != DBNull.Value
-                    ? Convert.ToDecimal(reader["COSTO"])
-                    : (decimal?)null
+                TipoTarea = reader["TIPOTAREA"] != DBNull.Value ? reader["TIPOTAREA"].ToString() : string.Empty,
+                FechaTarea = Convert.ToDateTime(reader["FECHATAREA"]),
+                Urgencia = reader["URGENCIA"] != DBNull.Value ? Convert.ToInt32(reader["URGENCIA"]) : (int?)null,
+                EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "0",
+                Costo = Convert.ToDecimal(reader["COSTO"])
             };
         }
 
         public Response<Tareas> Insertar(Tareas entidad)
         {
-            Response<Tareas> response = new Response<Tareas>();
-
+            var response = new Response<Tareas>();
             string queryId = "SELECT SEQ_TAREAS.NEXTVAL FROM DUAL";
-            string queryInsert = "INSERT INTO TAREAS (ID_TAREA, ID_PARCELA, TIPOTAREA, FECHATAREA, " +
-                           "URGENCIA, ESTADO, COSTO) " +
-                           "VALUES (:Id, :IdParcela, :TipoTarea, :FechaTarea, :Urgencia, :Estado, :Costo)";
+            string queryInsert = @"INSERT INTO TAREAS (ID_TAREA, ID_PARCELA, TIPOTAREA, FECHATAREA, URGENCIA, ESTADO, COSTO)
+                                   VALUES (:Id, :IdParcela, :TipoTarea, :FechaTarea, :Urgencia, :Estado, :Costo)";
 
             OracleTransaction transaction = null;
 
@@ -52,32 +41,31 @@ namespace DAL
                 transaction = conexion.BeginTransaction();
 
                 int nuevoId;
-                using (OracleCommand commandId = new OracleCommand(queryId, conexion))
+                using (var cmdId = conexion.CreateCommand())
                 {
-                    commandId.Transaction = transaction;
-                    nuevoId = Convert.ToInt32(commandId.ExecuteScalar());
+                    cmdId.Transaction = transaction;
+                    cmdId.CommandText = queryId;
+                    nuevoId = Convert.ToInt32(cmdId.ExecuteScalar());
                 }
 
-                using (OracleCommand command = new OracleCommand(queryInsert, conexion))
+                using (var cmd = conexion.CreateCommand())
                 {
-                    command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("Id", nuevoId));
-                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
-                    command.Parameters.Add(new OracleParameter("TipoTarea",
-                        entidad.TipoTarea ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaTarea",
-                        entidad.FechaTarea.HasValue ? (object)entidad.FechaTarea.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Urgencia",
-                        entidad.Urgencia.HasValue ? (object)entidad.Urgencia.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Estado",
-                        entidad.EstadoChar ?? "0"));
-                    command.Parameters.Add(new OracleParameter("Costo",
-                        entidad.Costo.HasValue ? (object)entidad.Costo.Value : DBNull.Value));
+                    cmd.Transaction = transaction;
+                    cmd.CommandText = queryInsert;
 
-                    command.ExecuteNonQuery();
+                    cmd.Parameters.Add(new OracleParameter("Id", OracleDbType.Int32) { Value = nuevoId });
+                    cmd.Parameters.Add(new OracleParameter("IdParcela", OracleDbType.Int32) { Value = entidad.IdParcela });
+                    cmd.Parameters.Add(new OracleParameter("TipoTarea", OracleDbType.Varchar2) { Value = (object)entidad.TipoTarea ?? DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("FechaTarea", OracleDbType.Date) { Value = entidad.FechaTarea });
+                    cmd.Parameters.Add(new OracleParameter("Urgencia", OracleDbType.Int32) { Value = (object)entidad.Urgencia ?? DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Estado", OracleDbType.Varchar2) { Value = entidad.EstadoChar ?? "0" });
+                    cmd.Parameters.Add(new OracleParameter("Costo", OracleDbType.Decimal) { Value = entidad.Costo });
+
+                    cmd.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
+
                 entidad.Id = nuevoId;
                 response.Estado = true;
                 response.Mensaje = "Tarea registrada exitosamente";
@@ -85,7 +73,7 @@ namespace DAL
             }
             catch (Exception ex)
             {
-                transaction?.Rollback();
+                try { transaction?.Rollback(); } catch { /* ignorar */ }
                 response.Estado = false;
                 response.Mensaje = "Error al insertar tarea: " + ex.Message;
             }
@@ -99,11 +87,15 @@ namespace DAL
 
         public Response<Tareas> Actualizar(Tareas entidad)
         {
-            Response<Tareas> response = new Response<Tareas>();
-            string query = "UPDATE TAREAS SET ID_PARCELA = :IdParcela, TIPOTAREA = :TipoTarea, " +
-                           "FECHATAREA = :FechaTarea, URGENCIA = :Urgencia, ESTADO = :Estado, " +
-                           "COSTO = :Costo " +
-                           "WHERE ID_TAREA = :Id";
+            var response = new Response<Tareas>();
+            string query = @"UPDATE TAREAS
+                             SET ID_PARCELA = :IdParcela,
+                                 TIPOTAREA = :TipoTarea,
+                                 FECHATAREA = :FechaTarea,
+                                 URGENCIA = :Urgencia,
+                                 ESTADO = :Estado,
+                                 COSTO = :Costo
+                             WHERE ID_TAREA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -112,23 +104,27 @@ namespace DAL
                 AbrirConexion();
                 transaction = conexion.BeginTransaction();
 
-                using (OracleCommand command = new OracleCommand(query, conexion))
+                using (var cmd = conexion.CreateCommand())
                 {
-                    command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
-                    command.Parameters.Add(new OracleParameter("TipoTarea",
-                        entidad.TipoTarea ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaTarea",
-                        entidad.FechaTarea.HasValue ? (object)entidad.FechaTarea.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Urgencia",
-                        entidad.Urgencia.HasValue ? (object)entidad.Urgencia.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Estado",
-                        entidad.EstadoChar ?? "0"));
-                    command.Parameters.Add(new OracleParameter("Costo",
-                        entidad.Costo.HasValue ? (object)entidad.Costo.Value : DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Id", entidad.Id));
+                    cmd.Transaction = transaction;
+                    cmd.CommandText = query;
 
-                    command.ExecuteNonQuery();
+                    cmd.Parameters.Add(new OracleParameter("IdParcela", OracleDbType.Int32) { Value = entidad.IdParcela });
+                    cmd.Parameters.Add(new OracleParameter("TipoTarea", OracleDbType.Varchar2) { Value = (object)entidad.TipoTarea ?? DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("FechaTarea", OracleDbType.Date) { Value = entidad.FechaTarea });
+                    cmd.Parameters.Add(new OracleParameter("Urgencia", OracleDbType.Int32) { Value = (object)entidad.Urgencia ?? DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Estado", OracleDbType.Varchar2) { Value = entidad.EstadoChar ?? "0" });
+                    cmd.Parameters.Add(new OracleParameter("Costo", OracleDbType.Decimal) { Value = entidad.Costo });
+                    cmd.Parameters.Add(new OracleParameter("Id", OracleDbType.Int32) { Value = entidad.Id });
+
+                    int filas = cmd.ExecuteNonQuery();
+                    if (filas == 0)
+                    {
+                        transaction.Rollback();
+                        response.Estado = false;
+                        response.Mensaje = "No se encontró la tarea para actualizar.";
+                        return response;
+                    }
                 }
 
                 transaction.Commit();
@@ -138,7 +134,7 @@ namespace DAL
             }
             catch (Exception ex)
             {
-                transaction?.Rollback();
+                try { transaction?.Rollback(); } catch { }
                 response.Estado = false;
                 response.Mensaje = "Error al actualizar tarea: " + ex.Message;
             }
@@ -152,7 +148,7 @@ namespace DAL
 
         public Response<Tareas> Eliminar(int id)
         {
-            Response<Tareas> response = new Response<Tareas>();
+            var response = new Response<Tareas>();
             string query = "DELETE FROM TAREAS WHERE ID_TAREA = :Id";
 
             OracleTransaction transaction = null;
@@ -162,11 +158,20 @@ namespace DAL
                 AbrirConexion();
                 transaction = conexion.BeginTransaction();
 
-                using (OracleCommand command = new OracleCommand(query, conexion))
+                using (var cmd = conexion.CreateCommand())
                 {
-                    command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("Id", id));
-                    command.ExecuteNonQuery();
+                    cmd.Transaction = transaction;
+                    cmd.CommandText = query;
+                    cmd.Parameters.Add(new OracleParameter("Id", OracleDbType.Int32) { Value = id });
+
+                    int filas = cmd.ExecuteNonQuery();
+                    if (filas == 0)
+                    {
+                        transaction.Rollback();
+                        response.Estado = false;
+                        response.Mensaje = "No se encontró la tarea para eliminar.";
+                        return response;
+                    }
                 }
 
                 transaction.Commit();
@@ -175,7 +180,7 @@ namespace DAL
             }
             catch (Exception ex)
             {
-                transaction?.Rollback();
+                try { transaction?.Rollback(); } catch { }
                 response.Estado = false;
                 response.Mensaje = "Error al eliminar tarea: " + ex.Message;
             }
@@ -189,18 +194,19 @@ namespace DAL
 
         public Response<Tareas> ObtenerPorId(int id)
         {
-            Response<Tareas> response = new Response<Tareas>();
+            var response = new Response<Tareas>();
             string query = "SELECT * FROM TAREAS WHERE ID_TAREA = :Id";
 
             try
             {
                 AbrirConexion();
 
-                using (OracleCommand command = new OracleCommand(query, conexion))
+                using (var cmd = conexion.CreateCommand())
                 {
-                    command.Parameters.Add(new OracleParameter("Id", id));
+                    cmd.CommandText = query;
+                    cmd.Parameters.Add(new OracleParameter("Id", OracleDbType.Int32) { Value = id });
 
-                    using (OracleDataReader reader = command.ExecuteReader())
+                    using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
@@ -212,6 +218,7 @@ namespace DAL
                         {
                             response.Estado = false;
                             response.Mensaje = "Tarea no encontrada";
+                            response.Entidad = null;
                         }
                     }
                 }
@@ -220,6 +227,7 @@ namespace DAL
             {
                 response.Estado = false;
                 response.Mensaje = "Error al obtener tarea: " + ex.Message;
+                response.Entidad = null;
             }
             finally
             {
@@ -231,17 +239,18 @@ namespace DAL
 
         public Response<Tareas> ObtenerTodos()
         {
-            Response<Tareas> response = new Response<Tareas>();
-            List<Tareas> listaTareas = new List<Tareas>();
+            var response = new Response<Tareas>();
+            var listaTareas = new List<Tareas>();
             string query = "SELECT * FROM TAREAS ORDER BY FECHATAREA DESC";
 
             try
             {
                 AbrirConexion();
 
-                using (OracleCommand command = new OracleCommand(query, conexion))
+                using (var cmd = conexion.CreateCommand())
                 {
-                    using (OracleDataReader reader = command.ExecuteReader())
+                    cmd.CommandText = query;
+                    using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -251,15 +260,14 @@ namespace DAL
                 }
 
                 response.Estado = true;
-                response.Mensaje = listaTareas.Count > 0
-                    ? $"Se encontraron {listaTareas.Count} tareas"
-                    : "No hay tareas registradas";
+                response.Mensaje = listaTareas.Count > 0 ? $"Se encontraron {listaTareas.Count} tareas" : "No hay tareas registradas";
                 response.Lista = listaTareas;
             }
             catch (Exception ex)
             {
                 response.Estado = false;
                 response.Mensaje = "Error al obtener tareas: " + ex.Message;
+                response.Lista = null;
             }
             finally
             {
@@ -267,6 +275,32 @@ namespace DAL
             }
 
             return response;
+        }
+
+        public decimal CalcularCostoTotalTareas(int idParcela)
+        {
+            const string query = "SELECT NVL(SUM(COSTO), 0) FROM TAREAS WHERE ID_PARCELA = :IdParcela";
+            decimal costoTotal = 0;
+
+            try
+            {
+                AbrirConexion();
+
+                using (OracleCommand command = new OracleCommand(query, conexion))
+                {
+                    command.Parameters.Add(new OracleParameter("IdParcela", idParcela));
+                    object resultado = command.ExecuteScalar();
+
+                    if (resultado != null && resultado != DBNull.Value)
+                        costoTotal = Convert.ToDecimal(resultado);
+                }
+            }
+            finally
+            {
+                CerrarConexion();
+            }
+
+            return costoTotal;
         }
 
 
@@ -561,47 +595,6 @@ namespace DAL
         //        transaction?.Rollback();
         //        response.Estado = false;
         //        response.Mensaje = "Error al marcar tarea como pendiente: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
-
-        //public Response<Tareas> CalcularCostoTotalParcela(int idParcela)
-        //{
-        //    Response<Tareas> response = new Response<Tareas>();
-        //    string query = "SELECT SUM(COSTO) AS COSTO_TOTAL FROM TAREAS WHERE ID_PARCELA = :IdParcela AND COSTO IS NOT NULL";
-
-        //    try
-        //    {
-        //        AbrirConexion();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Parameters.Add(new OracleParameter("IdParcela", idParcela));
-
-        //            object resultado = command.ExecuteScalar();
-
-        //            if (resultado != null && resultado != DBNull.Value)
-        //            {
-        //                decimal costoTotal = Convert.ToDecimal(resultado);
-        //                response.Estado = true;
-        //                response.Mensaje = $"Costo total de tareas: ${costoTotal:N2}";
-        //            }
-        //            else
-        //            {
-        //                response.Estado = true;
-        //                response.Mensaje = "La parcela no tiene tareas con costo registrado. Costo total: $0.00";
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al calcular costo total: " + ex.Message;
         //    }
         //    finally
         //    {

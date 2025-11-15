@@ -11,6 +11,9 @@ namespace BLL
 {
     public class RentabilidadService : ICrudEscritura<Rentabilidad>, ICrudLectura<Rentabilidad>
     {
+        InsumoRepository insumoRepository = new InsumoRepository();
+        TareasRepository tareasRepository = new TareasRepository();
+
         private readonly RentabilidadRepository rentabilidadRepository;
 
         public RentabilidadService()
@@ -48,5 +51,16 @@ namespace BLL
             var response = rentabilidadRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
+
+        public decimal CalcularCostoTotalProduccion(int idParcela)
+        {
+            decimal costoInsumos = insumoRepository.CalcularCostoTotalInsumos(idParcela);
+            decimal costoTareas = tareasRepository.CalcularCostoTotalTareas(idParcela);
+
+            return costoInsumos + costoTareas;
+        }
+
+
+
     }
 }

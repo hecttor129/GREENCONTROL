@@ -26,11 +26,16 @@ namespace ENTITY
         [Column("costo_unitario")]
         public float CostoUnitario { get; set; }
 
-        // 🔗 Relación con Parcela
         [ForeignKey("IdParcela")]
         public virtual Parcela Parcela { get; set; }
 
-        public Insumo() { }
+        [Column("FECHAINSUMO")]
+        public DateTime? FechaInsumo { get; set; }
+
+
+
+
+        //public Insumo() { }
 
         //public Insumo(int id, int idParcela, int unidad, string tipo, float costoUnitario)
         //{
