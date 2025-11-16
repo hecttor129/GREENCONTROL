@@ -12,10 +12,13 @@ namespace BLL
     public class HistorialService : ICrudEscritura<Historial>, ICrudLectura<Historial>
     {
         private readonly HistorialRepository historialRepository;
+        private readonly ParcelaRepository parcelaRepository;
+
 
         public HistorialService()
         {
             historialRepository = new HistorialRepository();
+            parcelaRepository = new ParcelaRepository();
         }
 
         public string Guardar(Historial entidad)
@@ -48,5 +51,19 @@ namespace BLL
             var response = historialRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
+
+        public Historial ObtenerDatos(int idParcela)
+        {
+           var infoparcela = parcelaRepository.ObtenerPorId(idParcela);
+
+
+
+
+
+
+        }
+
+
+
     }
 }

@@ -48,5 +48,20 @@ namespace BLL
             var response = parcelaRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
+
+
+        public Historial ObtenerDatos(int idParcela)
+        {
+
+
+
+            throw new NotImplementedException();
+
+        }
+
+
+
+
+
     }
 }

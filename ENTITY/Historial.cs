@@ -12,8 +12,13 @@ namespace ENTITY
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int IdHistorial { get; set; }
 
+        [Required]
+        [ForeignKey("Parcela")]
         [Column("IDPARCELA")]
-        public int? IdParcela { get; set; }
+        public int IdParcela { get; set; }
+
+        [Column("IPARCELACOPY")]
+        public int IdParcelaCopy { get; set; } 
 
         [Column("FECHACOSECHA")]
         public DateTime? FechaCosecha { get; set; }
@@ -71,9 +76,8 @@ namespace ENTITY
 
         [Column("FECHASNAPSHOT")]
         public DateTime? FechaSnapshot { get; set; }
+        public virtual Parcela Parcela { get; set; }
 
-        // Nota: Historial NO tiene ForeignKey a Parcela (sobrevive por sí solo)
-        // Solo guarda el IdParcela como dato histórico
 
         public Historial() { }
     }
