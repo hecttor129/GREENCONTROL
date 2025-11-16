@@ -13,9 +13,9 @@ namespace ENTITY
         public int IdHistorialGasto { get; set; }
 
         [Required]
-        [ForeignKey("Historial")]
-        [Column("IDHISTORIAL")]
-        public int IdHistorial { get; set; }
+        [ForeignKey("Parcela")]
+        [Column("IDPARCELA")]
+        public int IdParcela { get; set; }
 
         [Column("FECHAGASTO")]
         public DateTime? FechaGasto { get; set; }
@@ -28,12 +28,13 @@ namespace ENTITY
         public string Tipo { get; set; }
 
         [Column("DESCRIPCION")]
-        public string Descripcion { get; set; }  // CLOB → string
+        public string Descripcion { get; set; } // CLOB
 
         [Column("MONTO")]
         public decimal? Monto { get; set; }
 
         // Navegación
-        public virtual Historial Historial { get; set; }
+        public virtual Parcela Parcela { get; set; }
     }
 }
+

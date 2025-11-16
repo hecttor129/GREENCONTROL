@@ -74,7 +74,6 @@ namespace BLL
             var response = tareasRepository.Actualizar(tarea);
             return response.Estado;
         }
-
         public bool ReabrirTarea(int idTarea)
         {
             var tarea = tareasRepository.ObtenerPorId(idTarea).Entidad;

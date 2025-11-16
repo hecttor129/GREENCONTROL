@@ -19,7 +19,9 @@ namespace DAL
                 IdCultivo = Convert.ToInt32(reader["IDCULTIVO"]),
                 Nombre = reader["NOMBRE"] != DBNull.Value ? reader["NOMBRE"].ToString() : null,
                 AreaCalculada = reader["AREACALCULADA"] != DBNull.Value ? Convert.ToDecimal(reader["AREACALCULADA"]) : (decimal?)null,
-                Poligonos = reader["POLIGONOS"] != DBNull.Value ? reader["POLIGONOS"].ToString() : null
+                Poligonos = reader["POLIGONOS"] != DBNull.Value ? reader["POLIGONOS"].ToString() : null,
+                TipoSuelo = reader["TIPOSUELO"] != DBNull.Value ? reader["TIPOSUELO"].ToString() : null,
+                PhSuelo = reader["PHSUELO"] != DBNull.Value ? Convert.ToDecimal(reader["PHSUELO"]) : (decimal?)null
             };
         }
 
@@ -28,8 +30,8 @@ namespace DAL
             Response<Parcela> response = new Response<Parcela>();
 
             string queryId = "SELECT SEQ_PARCELA.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO PARCELA (IDPARCELA, IDFINCA, IDCULTIVO, NOMBRE, AREACALCULADA, POLIGONOS) 
-                           VALUES (:Id, :IdFinca, :IdCultivo, :Nombre, :AreaCalculada, :Poligonos)";
+            string queryInsert = @"INSERT INTO PARCELA (IDPARCELA, IDFINCA, IDCULTIVO, NOMBRE, AREACALCULADA, POLIGONOS, TIPOSUELO, PHSUELO) 
+                           VALUES (:Id, :IdFinca, :IdCultivo, :Nombre, :AreaCalculada, :Poligonos, :TipoSuelo, :PhSuelo)";
 
             OracleTransaction transaction = null;
 
@@ -48,16 +50,20 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(queryInsert, conexion))
                 {
                     command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("Id", nuevoId));
-                    command.Parameters.Add(new OracleParameter("IdFinca", entidad.IdFinca));
-                    command.Parameters.Add(new OracleParameter("IdCultivo", entidad.IdCultivo));
-                    command.Parameters.Add(new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Poligonos", OracleDbType.Clob)
-                    {
-                        Value = entidad.Poligonos ?? (object)DBNull.Value
-                    });
 
+                    var parametros = new OracleParameter[]
+                    {
+                        new OracleParameter("Id", nuevoId),
+                        new OracleParameter("IdFinca", entidad.IdFinca),
+                        new OracleParameter("IdCultivo", entidad.IdCultivo),
+                        new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value),
+                        new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value),
+                        new OracleParameter("Poligonos", OracleDbType.Clob) { Value = entidad.Poligonos ?? (object)DBNull.Value },
+                        new OracleParameter("TipoSuelo", OracleDbType.Varchar2) { Value = entidad.TipoSuelo ?? (object)DBNull.Value },
+                        new OracleParameter("PhSuelo", OracleDbType.Decimal) { Value = entidad.PhSuelo ?? (object)DBNull.Value }
+                    };
+
+                    command.Parameters.AddRange(parametros);
                     command.ExecuteNonQuery();
                 }
 
@@ -85,12 +91,14 @@ namespace DAL
         {
             Response<Parcela> response = new Response<Parcela>();
             string query = @"UPDATE PARCELA SET 
-                           IDFINCA = :IdFinca,
-                           IDCULTIVO = :IdCultivo,
-                           NOMBRE = :Nombre,
-                           AREACALCULADA = :AreaCalculada,
-                           POLIGONOS = :Poligonos 
-                           WHERE IDPARCELA = :Id";
+                   IDFINCA = :IdFinca,
+                   IDCULTIVO = :IdCultivo,
+                   NOMBRE = :Nombre,
+                   AREACALCULADA = :AreaCalculada,
+                   POLIGONOS = :Poligonos,
+                   TIPOSUELO = :TipoSuelo,
+                   PHSUELO = :PhSuelo
+                   WHERE IDPARCELA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -102,16 +110,20 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(query, conexion))
                 {
                     command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("IdFinca", entidad.IdFinca));
-                    command.Parameters.Add(new OracleParameter("IdCultivo", entidad.IdCultivo));
-                    command.Parameters.Add(new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Poligonos", OracleDbType.Clob)
-                    {
-                        Value = entidad.Poligonos ?? (object)DBNull.Value
-                    });
-                    command.Parameters.Add(new OracleParameter("Id", entidad.IdParcela));
 
+                    var parametros = new OracleParameter[]
+                    {
+                new OracleParameter("IdFinca", entidad.IdFinca),
+                new OracleParameter("IdCultivo", entidad.IdCultivo),
+                new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value),
+                new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value),
+                new OracleParameter("Poligonos", OracleDbType.Clob) { Value = entidad.Poligonos ?? (object)DBNull.Value },
+                new OracleParameter("TipoSuelo", OracleDbType.Varchar2) { Value = entidad.TipoSuelo ?? (object)DBNull.Value },
+                new OracleParameter("PhSuelo", OracleDbType.Decimal) { Value = entidad.PhSuelo ?? (object)DBNull.Value },
+                new OracleParameter("Id", entidad.IdParcela)
+                    };
+
+                    command.Parameters.AddRange(parametros);
                     command.ExecuteNonQuery();
                 }
 
@@ -252,8 +264,5 @@ namespace DAL
 
             return response;
         }
-
-
-
-        }
+    }
 }

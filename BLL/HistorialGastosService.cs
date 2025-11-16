@@ -48,5 +48,23 @@ namespace BLL
             var response = historialGastosRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
+
+        public HistorialGastos CrearHistorialGastoDesdeRegistro(Gastos gasto)
+        {
+            return new HistorialGastos
+            {
+                IdHistorialGasto = gasto.Id,
+                IdParcela = gasto.IdParcela,
+
+                Tipo = gasto.Tipo,
+                Monto = gasto.Monto,
+                Descripcion = gasto.Descripcion,
+                FechaGasto = gasto.Fecha,
+
+                // Momento del snapshot
+                //FechaSnapshot = DateTime.Now
+            };
+        }
+
     }
 }

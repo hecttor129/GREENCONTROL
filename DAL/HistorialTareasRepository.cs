@@ -15,7 +15,7 @@ namespace DAL
             return new HistorialTareas
             {
                 IdHistorialTareas = Convert.ToInt32(reader["IDHISTORIALTAREAS"]),
-                IdHistorial = Convert.ToInt32(reader["IDHISTORIAL"]),
+                IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
                 Tipo = reader["TIPO"] != DBNull.Value ? reader["TIPO"].ToString() : null,
                 FechaTarea = reader["FECHATAREA"] != DBNull.Value ? Convert.ToDateTime(reader["FECHATAREA"]) : (DateTime?)null,
                 EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "0",
@@ -30,8 +30,8 @@ namespace DAL
 
             string queryId = "SELECT SEQ_HISTORIALTAREAS.NEXTVAL FROM DUAL";
             string queryInsert = @"INSERT INTO HISTORIALTAREAS 
-                (IDHISTORIALTAREAS, IDHISTORIAL, TIPO, FECHATAREA, ESTADO, URGENCIA, COSTO)
-                VALUES (:Id, :IdHistorial, :Tipo, :FechaTarea, :Estado, :Urgencia, :Costo)";
+                (IDHISTORIALTAREAS, IDPARCELA, TIPO, FECHATAREA, ESTADO, URGENCIA, COSTO)
+                VALUES (:Id, :IdParcela, :Tipo, :FechaTarea, :Estado, :Urgencia, :Costo)";
 
             OracleTransaction transaction = null;
 
@@ -51,7 +51,7 @@ namespace DAL
                 {
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
-                    command.Parameters.Add(new OracleParameter("IdHistorial", entidad.IdHistorial));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("FechaTarea", entidad.FechaTarea ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
@@ -84,8 +84,9 @@ namespace DAL
         public Response<HistorialTareas> Actualizar(HistorialTareas entidad)
         {
             Response<HistorialTareas> response = new Response<HistorialTareas>();
+
             string query = @"UPDATE HISTORIALTAREAS SET 
-                             IDHISTORIAL = :IdHistorial,
+                             IDPARCELA = :IdParcela,
                              TIPO = :Tipo,
                              FECHATAREA = :FechaTarea,
                              ESTADO = :Estado,
@@ -103,7 +104,7 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(query, conexion))
                 {
                     command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("IdHistorial", entidad.IdHistorial));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("FechaTarea", entidad.FechaTarea ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
@@ -136,6 +137,7 @@ namespace DAL
         public Response<HistorialTareas> Eliminar(int id)
         {
             Response<HistorialTareas> response = new Response<HistorialTareas>();
+
             string query = "DELETE FROM HISTORIALTAREAS WHERE IDHISTORIALTAREAS = :Id";
 
             OracleTransaction transaction = null;

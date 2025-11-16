@@ -13,9 +13,9 @@ namespace ENTITY
         public int IdHistorialTareas { get; set; }
 
         [Required]
-        [ForeignKey("Historial")]
-        [Column("IDHISTORIAL")]
-        public int IdHistorial { get; set; }
+        [ForeignKey("Parcela")]
+        [Column("IDPARCELA")]
+        public int IdParcela { get; set; }
 
         [Column("TIPO")]
         [StringLength(20)]
@@ -42,6 +42,7 @@ namespace ENTITY
         public decimal? Costo { get; set; }
 
         // Navegación
-        public virtual Historial Historial { get; set; }
+        public virtual Parcela Parcela { get; set; }
     }
 }
+

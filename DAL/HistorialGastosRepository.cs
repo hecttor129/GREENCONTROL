@@ -15,7 +15,7 @@ namespace DAL
             return new HistorialGastos
             {
                 IdHistorialGasto = Convert.ToInt32(reader["IDHISTORIALGASTO"]),
-                IdHistorial = Convert.ToInt32(reader["IDHISTORIAL"]),
+                IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
                 FechaGasto = reader["FECHAGASTO"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAGASTO"]) : (DateTime?)null,
                 Recurrencia = reader["RECURRENCIA"] != DBNull.Value ? Convert.ToInt32(reader["RECURRENCIA"]) : (int?)null,
                 Tipo = reader["TIPO"] != DBNull.Value ? reader["TIPO"].ToString() : null,
@@ -30,8 +30,8 @@ namespace DAL
 
             string queryId = "SELECT SEQ_HISTORIALGASTOS.NEXTVAL FROM DUAL";
             string queryInsert = @"INSERT INTO HISTORIALGASTOS 
-                (IDHISTORIALGASTO, IDHISTORIAL, FECHAGASTO, RECURRENCIA, TIPO, DESCRIPCION, MONTO)
-                VALUES (:Id, :IdHistorial, :FechaGasto, :Recurrencia, :Tipo, :Descripcion, :Monto)";
+                (IDHISTORIALGASTO, IDPARCELA, FECHAGASTO, RECURRENCIA, TIPO, DESCRIPCION, MONTO)
+                VALUES (:Id, :IdParcela, :FechaGasto, :Recurrencia, :Tipo, :Descripcion, :Monto)";
 
             OracleTransaction transaction = null;
 
@@ -51,7 +51,7 @@ namespace DAL
                 {
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
-                    command.Parameters.Add(new OracleParameter("IdHistorial", entidad.IdHistorial));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("FechaGasto", entidad.FechaGasto ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Recurrencia", entidad.Recurrencia ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
@@ -88,7 +88,7 @@ namespace DAL
         {
             Response<HistorialGastos> response = new Response<HistorialGastos>();
             string query = @"UPDATE HISTORIALGASTOS SET 
-                             IDHISTORIAL = :IdHistorial,
+                             IDPARCELA = :IdParcela,
                              FECHAGASTO = :FechaGasto,
                              RECURRENCIA = :Recurrencia,
                              TIPO = :Tipo,
@@ -106,7 +106,7 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(query, conexion))
                 {
                     command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("IdHistorial", entidad.IdHistorial));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("FechaGasto", entidad.FechaGasto ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Recurrencia", entidad.Recurrencia ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));

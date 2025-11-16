@@ -48,5 +48,27 @@ namespace BLL
             var response = historialTareasRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
+
+        public HistorialTareas CrearHistorialDesdeTarea(
+               Tareas tarea,
+               Parcela parcela
+               )
+        {
+            return new HistorialTareas
+            {
+                IdHistorialTareas = tarea.IdTarea,
+                IdParcela = parcela.IdParcela,
+
+                // Datos de la tarea
+                Tipo = tarea.Tipo,
+                Estado = tarea.Estado,
+                FechaTarea = tarea.FechaTarea,   
+                Costo = tarea.Costo,
+
+                //FechaSnapshot = DateTime.Now
+
+            };
+        }
+
     }
 }

@@ -30,11 +30,17 @@ namespace ENTITY
         public string Nombre { get; set; }
 
         [Column("POLIGONOS")]
-        public string Poligonos { get; set; }  // CLOB → string
+        public string Poligonos { get; set; }  
 
-        // Navegación
         public virtual Finca Finca { get; set; }
         public virtual Cultivo Cultivo { get; set; }
+
+        [Column("PHSUELO")]
+        public decimal? PhSuelo { get; set; }
+
+        [Column("TIPOSUELO")]
+        [StringLength(30)]
+        public string TipoSuelo { get; set; }
 
         public Parcela()
         {

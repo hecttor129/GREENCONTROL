@@ -13,22 +13,34 @@ namespace BLL
     {
         private readonly HistorialRepository historialRepository;
         private readonly ParcelaRepository parcelaRepository;
+        private readonly CultivoRepository cultivoRepository;
+        private readonly CosechaRepository cosechaRepository;
+        private readonly GastosRepository gastosRepository;
+        private readonly SiembraService siembraService;
 
 
         public HistorialService()
         {
             historialRepository = new HistorialRepository();
             parcelaRepository = new ParcelaRepository();
+            cultivoRepository = new CultivoRepository();
+            cosechaRepository = new CosechaRepository();
+            gastosRepository = new GastosRepository();
+            siembraService = new SiembraService();
         }
 
         public string Guardar(Historial entidad)
         {
+            entidad.IdParcelaCopy = entidad.IdParcela;
+
             var response = historialRepository.Insertar(entidad);
             return response.Mensaje;
         }
 
         public bool Actualizar(Historial entidad)
         {
+            entidad.IdParcelaCopy = entidad.IdParcela;
+
             var response = historialRepository.Actualizar(entidad);
             return response.Estado;
         }
@@ -52,17 +64,51 @@ namespace BLL
             return response.Entidad;
         }
 
-        public Historial ObtenerDatos(int idParcela)
+        public Historial CrearHistorialDesdeRegistros(
+               Parcela parcela,
+               Cultivo cultivo,
+               Siembra siembra,
+               Cosecha cosecha,
+               decimal? costoTotalProduccion,
+               decimal? ingresoTotal,
+               decimal? rentabilidadFinal
+            )
         {
-           var infoparcela = parcelaRepository.ObtenerPorId(idParcela);
+            return new Historial
+            {
+                IdParcela = parcela.IdParcela,
+                IdParcelaCopy = parcela.IdParcela,
+
+                // Fechas principales
+                FechaSiembra = siembra.FechaSiembra,
+                FechaGerminacion = siembra.FechaGerminacion,
+                FechaFloracion = siembra.FechaFloracion,
+                FechaCosecha = siembra?.FechaCosecha,
 
 
+                // Producción
+                CalidadCosechada = cosecha?.CalidadCosechada,
+                CantidadCosechada = cosecha?.CantidadCosechada,
+                DuracionCiclo = siembraService.CalcularDuracionCiclo(),
+
+                // Datos de la parcela
+                NombreParcela = parcela.Nombre,
+                TipoSuelo = parcela.TipoSuelo,
+                PhSuelo = parcela.PhSuelo,
+
+                // Datos del cultivo
+                NombreCultivo = cultivo.Nombre,
 
 
+                // Datos económicos (YA RECIBIDOS, SIN CALCULAR)
+                CostoTotalProduccion = costoTotalProduccion,
+                IngresoTotal = ingresoTotal,
+                RentabilidadFinal = rentabilidadFinal,
 
-
+                // Momento en que se toma el snapshot
+                FechaSnapshot = DateTime.Now
+            };
         }
-
 
 
     }

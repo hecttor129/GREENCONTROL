@@ -17,8 +17,8 @@ namespace ENTITY
         [Column("IDPARCELA")]
         public int IdParcela { get; set; }
 
-        [Column("IPARCELACOPY")]
-        public int IdParcelaCopy { get; set; } 
+        [Column("IDPARCELACOPY")]
+        public int IdParcelaCopy { get; set; }
 
         [Column("FECHACOSECHA")]
         public DateTime? FechaCosecha { get; set; }
@@ -26,9 +26,15 @@ namespace ENTITY
         [Column("FECHASIEMBRA")]
         public DateTime? FechaSiembra { get; set; }
 
+        [Column("FECHAGERMINACION")]
+        public DateTime? FechaGerminacion { get; set; }
+
+        [Column("FECHAFLORACION")]
+        public DateTime? FechaFloracion { get; set; }
+
         [Column("ETAPAACTUAL")]
-        [StringLength(20)]
-        public string EtapaActual { get; set; }
+        [StringLength(25)]
+        public string? EtapaActual { get; set; }
 
         [Column("CALIDADCOSECHADA")]
         public int? CalidadCosechada { get; set; }
@@ -40,15 +46,15 @@ namespace ENTITY
         public int? DuracionCiclo { get; set; }
 
         [Column("NOMBRECULTIVO")]
-        [StringLength(20)]
+        [StringLength(40)]
         public string NombreCultivo { get; set; }
 
         [Column("NOMBREPARCELA")]
-        [StringLength(20)]
+        [StringLength(40)]
         public string NombreParcela { get; set; }
 
         [Column("TIPOSUELO")]
-        [StringLength(25)]
+        [StringLength(30)]
         public string TipoSuelo { get; set; }
 
         [Column("PHSUELO")]
@@ -76,10 +82,11 @@ namespace ENTITY
 
         [Column("FECHASNAPSHOT")]
         public DateTime? FechaSnapshot { get; set; }
-        public virtual Parcela Parcela { get; set; }
 
+        public virtual Parcela Parcela { get; set; }
 
         public Historial() { }
     }
 }
+
 

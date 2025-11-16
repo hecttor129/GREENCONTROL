@@ -16,21 +16,31 @@ namespace DAL
             return new Historial
             {
                 IdHistorial = Convert.ToInt32(reader["IDHISTORIAL"]),
-                IdParcela = reader["IDPARCELA"] != DBNull.Value ? Convert.ToInt32(reader["IDPARCELA"]) : (int?)null,
+                IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
+                IdParcelaCopy = reader["IDPARCELACOPY"] != DBNull.Value ? Convert.ToInt32(reader["IDPARCELACOPY"]) : 0,
+
                 FechaCosecha = reader["FECHACOSECHA"] != DBNull.Value ? Convert.ToDateTime(reader["FECHACOSECHA"]) : (DateTime?)null,
                 FechaSiembra = reader["FECHASIEMBRA"] != DBNull.Value ? Convert.ToDateTime(reader["FECHASIEMBRA"]) : (DateTime?)null,
+
+                FechaGerminacion = reader["FECHAGERMINACION"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAGERMINACION"]) : (DateTime?)null,
+                FechaFloracion = reader["FECHAFLORACION"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAFLORACION"]) : (DateTime?)null,
+
                 EtapaActual = reader["ETAPAACTUAL"] != DBNull.Value ? reader["ETAPAACTUAL"].ToString() : null,
                 CalidadCosechada = reader["CALIDADCOSECHADA"] != DBNull.Value ? Convert.ToInt32(reader["CALIDADCOSECHADA"]) : (int?)null,
                 CantidadCosechada = reader["CANTIDADCOSECHADA"] != DBNull.Value ? Convert.ToDecimal(reader["CANTIDADCOSECHADA"]) : (decimal?)null,
                 DuracionCiclo = reader["DURACIONCICLO"] != DBNull.Value ? Convert.ToInt32(reader["DURACIONCICLO"]) : (int?)null,
+
                 NombreCultivo = reader["NOMBRECULTIVO"] != DBNull.Value ? reader["NOMBRECULTIVO"].ToString() : null,
                 NombreParcela = reader["NOMBREPARCELA"] != DBNull.Value ? reader["NOMBREPARCELA"].ToString() : null,
                 TipoSuelo = reader["TIPOSUELO"] != DBNull.Value ? reader["TIPOSUELO"].ToString() : null,
                 PhSuelo = reader["PHSUELO"] != DBNull.Value ? Convert.ToDecimal(reader["PHSUELO"]) : (decimal?)null,
+
                 EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : null,
+
                 CostoTotalProduccion = reader["COSTOTOTALPRODUCCION"] != DBNull.Value ? Convert.ToDecimal(reader["COSTOTOTALPRODUCCION"]) : (decimal?)null,
                 IngresoTotal = reader["INGRESOTOTAL"] != DBNull.Value ? Convert.ToDecimal(reader["INGRESOTOTAL"]) : (decimal?)null,
                 RentabilidadFinal = reader["RENTABILIDADFINAL"] != DBNull.Value ? Convert.ToDecimal(reader["RENTABILIDADFINAL"]) : (decimal?)null,
+
                 FechaSnapshot = reader["FECHASNAPSHOT"] != DBNull.Value ? Convert.ToDateTime(reader["FECHASNAPSHOT"]) : (DateTime?)null
             };
         }
@@ -38,18 +48,26 @@ namespace DAL
         public Response<Historial> Insertar(Historial entidad)
         {
             Response<Historial> response = new Response<Historial>();
+            entidad.IdParcelaCopy = entidad.IdParcela;
 
             string queryId = "SELECT SEQ_HISTORIAL.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO HISTORIAL (
-                IDHISTORIAL, IDPARCELA, FECHACOSECHA, FECHASIEMBRA, ETAPAACTUAL, 
-                CALIDADCOSECHADA, CANTIDADCOSECHADA, DURACIONCICLO, NOMBRECULTIVO, 
-                NOMBREPARCELA, TIPOSUELO, PHSUELO, ESTADO, COSTOTOTALPRODUCCION, 
-                INGRESOTOTAL, RENTABILIDADFINAL, FECHASNAPSHOT) 
-                VALUES (
-                :Id, :IdParcela, :FechaCosecha, :FechaSiembra, :EtapaActual,
-                :CalidadCosechada, :CantidadCosechada, :DuracionCiclo, :NombreCultivo,
-                :NombreParcela, :TipoSuelo, :PhSuelo, :Estado, :CostoTotalProduccion,
-                :IngresoTotal, :RentabilidadFinal, :FechaSnapshot)";
+
+            string queryInsert = @"
+            INSERT INTO HISTORIAL (
+                IDHISTORIAL, IDPARCELA, IDPARCELACOPY, 
+                FECHACOSECHA, FECHASIEMBRA, FECHAGERMINACION, FECHAFLORACION, 
+                ETAPAACTUAL, CALIDADCOSECHADA, CANTIDADCOSECHADA, DURACIONCICLO,
+                NOMBRECULTIVO, NOMBREPARCELA, TIPOSUELO, PHSUELO,
+                ESTADO, COSTOTOTALPRODUCCION, INGRESOTOTAL, RENTABILIDADFINAL,
+                FECHASNAPSHOT
+            ) VALUES (
+                :Id, :IdParcela, :IdParcelaCopy,
+                :FechaCosecha, :FechaSiembra, :FechaGerminacion, :FechaFloracion,
+                :EtapaActual, :CalidadCosechada, :CantidadCosechada, :DuracionCiclo,
+                :NombreCultivo, :NombreParcela, :TipoSuelo, :PhSuelo,
+                :Estado, :CostoTotalProduccion, :IngresoTotal, :RentabilidadFinal,
+                :FechaSnapshot
+            )";
 
             OracleTransaction transaction = null;
 
@@ -59,38 +77,50 @@ namespace DAL
                 transaction = conexion.BeginTransaction();
 
                 int nuevoId;
-                using (OracleCommand commandId = new OracleCommand(queryId, conexion))
+                using (OracleCommand cmdId = new OracleCommand(queryId, conexion))
                 {
-                    commandId.Transaction = transaction;
-                    nuevoId = Convert.ToInt32(commandId.ExecuteScalar());
+                    cmdId.Transaction = transaction;
+                    nuevoId = Convert.ToInt32(cmdId.ExecuteScalar());
                 }
 
-                using (OracleCommand command = new OracleCommand(queryInsert, conexion))
+                using (OracleCommand cmd = new OracleCommand(queryInsert, conexion))
                 {
-                    command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("Id", nuevoId));
-                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("EtapaActual", entidad.EtapaActual ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CalidadCosechada", entidad.CalidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CantidadCosechada", entidad.CantidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DuracionCiclo", entidad.DuracionCiclo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("NombreCultivo", entidad.NombreCultivo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("NombreParcela", entidad.NombreParcela ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("IngresoTotal", entidad.IngresoTotal ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("RentabilidadFinal", entidad.RentabilidadFinal ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaSnapshot", entidad.FechaSnapshot ?? (object)DBNull.Value));
+                    cmd.Transaction = transaction;
 
-                    command.ExecuteNonQuery();
+                    cmd.Parameters.Add(new OracleParameter("Id", nuevoId));
+                    cmd.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
+                    cmd.Parameters.Add(new OracleParameter("IdParcelaCopy", entidad.IdParcelaCopy));
+
+                    cmd.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("FechaGerminacion", entidad.FechaGerminacion ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("FechaFloracion", entidad.FechaFloracion ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("EtapaActual", entidad.EtapaActual ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("CalidadCosechada", entidad.CalidadCosechada ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("CantidadCosechada", entidad.CantidadCosechada ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("DuracionCiclo", entidad.DuracionCiclo ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("NombreCultivo", entidad.NombreCultivo ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("NombreParcela", entidad.NombreParcela ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("IngresoTotal", entidad.IngresoTotal ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("RentabilidadFinal", entidad.RentabilidadFinal ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("FechaSnapshot", entidad.FechaSnapshot ?? (object)DBNull.Value));
+
+                    cmd.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
                 entidad.IdHistorial = nuevoId;
+
                 response.Estado = true;
                 response.Mensaje = "Historial registrado exitosamente";
                 response.Entidad = entidad;
@@ -112,10 +142,16 @@ namespace DAL
         public Response<Historial> Actualizar(Historial entidad)
         {
             Response<Historial> response = new Response<Historial>();
-            string query = @"UPDATE HISTORIAL SET 
+            entidad.IdParcelaCopy = entidad.IdParcela;
+
+            string query = @"
+            UPDATE HISTORIAL SET 
                 IDPARCELA = :IdParcela,
+                IDPARCELACOPY = :IdParcelaCopy,
                 FECHACOSECHA = :FechaCosecha,
                 FECHASIEMBRA = :FechaSiembra,
+                FECHAGERMINACION = :FechaGerminacion,
+                FECHAFLORACION = :FechaFloracion,
                 ETAPAACTUAL = :EtapaActual,
                 CALIDADCOSECHADA = :CalidadCosechada,
                 CANTIDADCOSECHADA = :CantidadCosechada,
@@ -129,7 +165,7 @@ namespace DAL
                 INGRESOTOTAL = :IngresoTotal,
                 RENTABILIDADFINAL = :RentabilidadFinal,
                 FECHASNAPSHOT = :FechaSnapshot
-                WHERE IDHISTORIAL = :Id";
+            WHERE IDHISTORIAL = :Id";
 
             OracleTransaction transaction = null;
 
@@ -138,31 +174,45 @@ namespace DAL
                 AbrirConexion();
                 transaction = conexion.BeginTransaction();
 
-                using (OracleCommand command = new OracleCommand(query, conexion))
+                using (OracleCommand cmd = new OracleCommand(query, conexion))
                 {
-                    command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("EtapaActual", entidad.EtapaActual ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CalidadCosechada", entidad.CalidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CantidadCosechada", entidad.CantidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DuracionCiclo", entidad.DuracionCiclo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("NombreCultivo", entidad.NombreCultivo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("NombreParcela", entidad.NombreParcela ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("IngresoTotal", entidad.IngresoTotal ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("RentabilidadFinal", entidad.RentabilidadFinal ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaSnapshot", entidad.FechaSnapshot ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Id", entidad.IdHistorial));
+                    cmd.Transaction = transaction;
 
-                    command.ExecuteNonQuery();
+                    cmd.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
+                    cmd.Parameters.Add(new OracleParameter("IdParcelaCopy", entidad.IdParcelaCopy));
+
+                    cmd.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra ?? (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(new OracleParameter("FechaGerminacion", entidad.FechaGerminacion ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("FechaFloracion", entidad.FechaFloracion ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("EtapaActual", entidad.EtapaActual ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("CalidadCosechada", entidad.CalidadCosechada ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("CantidadCosechada", entidad.CantidadCosechada ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("DuracionCiclo", entidad.DuracionCiclo ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("NombreCultivo", entidad.NombreCultivo ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("NombreParcela", entidad.NombreParcela ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("IngresoTotal", entidad.IngresoTotal ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("RentabilidadFinal", entidad.RentabilidadFinal ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("FechaSnapshot", entidad.FechaSnapshot ?? (object)DBNull.Value));
+
+                    cmd.Parameters.Add(new OracleParameter("Id", entidad.IdHistorial));
+
+                    cmd.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
+
                 response.Estado = true;
                 response.Mensaje = "Historial actualizado exitosamente";
                 response.Entidad = entidad;
