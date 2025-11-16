@@ -8,35 +8,28 @@ using System.Threading.Tasks;
 
 namespace ENTITY
 {
-    public class Rentabilidad 
+    [Table("RENTABILIDAD")]
+    public class Rentabilidad
     {
         [Key]
-        [Column("ID_RENTABILIDAD")]
+        [Column("IDRENTABILIDAD")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int IdRentabilidad { get; set; }
 
+        [Required]
         [ForeignKey("Parcela")]
-        [Column("ID_PARCELA")]
+        [Column("IDPARCELA")]
         public int IdParcela { get; set; }
-
-        [Column("PRECIOVENTAUNITARIO")]
-        public decimal? PrecioVentaUnitario { get; set; }
-
-        [Column("COSTOTOTALPRODUCCION")]
-        public decimal? CostoTotalProduccion { get; set; }
-
-        [Column("CANTIDADCOSECHADA")]
-        public decimal? CantidadCosechada { get; set; }
 
         [Column("INGRESOTOTAL")]
         public decimal? IngresoTotal { get; set; }
 
+        [Column("COSTOTOTALPRODUCCION")]
+        public decimal? CostoTotalProduccion { get; set; }
+
         [Column("RENTABILIDADPORCENTUAL")]
         public decimal? RentabilidadPorcentual { get; set; }
 
-        [Column("CALIDADCOSECHADA")]
-        [StringLength(15)]
-        public string CalidadCosechada { get; set; }
-
+        public virtual Parcela Parcela { get; set; }
     }
 }

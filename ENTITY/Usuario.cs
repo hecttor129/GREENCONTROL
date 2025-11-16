@@ -8,17 +8,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ENTITY
 {
-    public class Usuario 
+    [Table("USUARIO")]
+    public class Usuario
     {
         [Key]
-        [Column("ID_USUARIO")]
+        [Column("IDUSUARIO")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int IdUsuario { get; set; }
 
         [Required]
-        [Column("NOMBRE")]
-        [StringLength(30)]
-        public string Nombre { get; set; }
+        [Column("PASSWORD")]
+        [StringLength(255)]
+        public string Password { get; set; }
 
         [Required]
         [Column("EMAIL")]
@@ -26,13 +27,12 @@ namespace ENTITY
         public string Email { get; set; }
 
         [Required]
-        [Column("PASSWORD")]
-        [StringLength(15)]
-        public string Password { get; set; }
+        [Column("NOMBRE")]
+        [StringLength(20)]
+        public string Nombre { get; set; }
 
         [Column("TELEFONO")]
         [StringLength(10)]
         public string Telefono { get; set; }
-
     }
 }

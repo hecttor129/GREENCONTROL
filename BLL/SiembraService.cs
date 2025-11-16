@@ -44,7 +44,7 @@ namespace BLL
         }
         public bool Eliminar(Siembra entidad)
         {
-            var response = siembraRepository.Eliminar(entidad.Id);
+            var response = siembraRepository.Eliminar(entidad.IdSiembra);
             return response.Estado;
         }
         public ReadOnlyCollection<Siembra> Consultar()
@@ -72,12 +72,12 @@ namespace BLL
                 return true;
             }
         }
-        public  bool ActivarSiembra(int id)
+        public bool ActivarSiembra(int id)
         {
             var siembra = siembraRepository.ObtenerPorId(id).Entidad;
             if (siembra == null)
                 return false;
-            siembra.Estado = "Activa";
+            siembra.EstadoChar = "A";
             var response = siembraRepository.Actualizar(siembra);
             return response.Estado;
         }
@@ -86,7 +86,7 @@ namespace BLL
             var siembra = siembraRepository.ObtenerPorId(id).Entidad;
             if (siembra == null)
                 return false;
-            siembra.Estado = "Inactiva";
+            siembra.EstadoChar = "I";
             var response = siembraRepository.Actualizar(siembra);
             return response.Estado;
         }
@@ -239,15 +239,5 @@ namespace BLL
         //    var response = siembraRepository.Actualizar(siembra);
         //    return response.Estado;
         //}
-
-
-
-
-
-
-
-
-
-
     }
 }

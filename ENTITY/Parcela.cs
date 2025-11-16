@@ -1,53 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ENTITY
 {
     [Table("PARCELA")]
-    public class Parcela 
+    public class Parcela
     {
         [Key]
-        [Column("id_parcela")]
+        [Column("IDPARCELA")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int IdParcela { get; set; }
 
-        [Column("id_usuario")]
         [Required]
-        public int IdUsuario { get; set; }
+        [ForeignKey("Finca")]
+        [Column("IDFINCA")]
+        public int IdFinca { get; set; }
 
-        [Column("nombre")]
-        [StringLength(30)]
+        [Required]
+        [ForeignKey("Cultivo")]
+        [Column("IDCULTIVO")]
+        public int IdCultivo { get; set; }
+
+        [Column("AREACALCULADA")]
+        public decimal? AreaCalculada { get; set; }
+
+        [Column("NOMBRE")]
+        [StringLength(20)]
         public string Nombre { get; set; }
 
-        [Column("ubicacion")]
-        [StringLength(30)]
-        public string Ubicacion { get; set; }
+        [Column("POLIGONOS")]
+        public string Poligonos { get; set; }  // CLOB → string
 
-        [Column("area")]
-        public double Area { get; set; }
-
-        // 🔗 Relación con Usuario
-        [ForeignKey("IdUsuario")]
-        public virtual Usuario Usuario { get; set; }
-
-        // 🔗 Relación con Insumo (1 Parcela → muchos Insumos)
-        public virtual ICollection<Insumo> Insumos { get; set; }
+        // Navegación
+        public virtual Finca Finca { get; set; }
+        public virtual Cultivo Cultivo { get; set; }
 
         public Parcela()
         {
-            Insumos = new HashSet<Insumo>();
         }
-
-        //public Parcela(int idUsuario, string nombre, string ubicacion, double area)
-        //{
-        //    IdUsuario = idUsuario;
-        //    Nombre = nombre;
-        //    Ubicacion = ubicacion;
-        //    Area = area;
-        //    Insumos = new HashSet<Insumo>();
-        //}
     }
 }
 

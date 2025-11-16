@@ -1,25 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ENTITY
 {
-    [Table("TAREAS")]
-    public class Tareas
+    [Table("HISTORIALTAREAS")]
+    public class HistorialTareas
     {
         [Key]
-        [Column("IDTAREA")]
+        [Column("IDHISTORIALTAREAS")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int IdTarea { get; set; }
+        public int IdHistorialTareas { get; set; }
 
         [Required]
-        [ForeignKey("Parcela")]
-        [Column("IDPARCELA")]
-        public int IdParcela { get; set; }
+        [ForeignKey("Historial")]
+        [Column("IDHISTORIAL")]
+        public int IdHistorial { get; set; }
 
         [Column("TIPO")]
         [StringLength(20)]
@@ -30,7 +26,7 @@ namespace ENTITY
 
         [Column("ESTADO")]
         [StringLength(1)]
-        public string EstadoChar { get; set; } = "0";
+        public string EstadoChar { get; set; }
 
         [NotMapped]
         public bool Estado
@@ -45,8 +41,7 @@ namespace ENTITY
         [Column("COSTO")]
         public decimal? Costo { get; set; }
 
-        public virtual Parcela Parcela { get; set; }
+        // Navegación
+        public virtual Historial Historial { get; set; }
     }
-
 }
-

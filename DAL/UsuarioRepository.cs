@@ -17,7 +17,7 @@ namespace DAL
 
             string queryId = "SELECT SEQ_USUARIO.NEXTVAL FROM DUAL";
             string queryInsert = @"INSERT INTO USUARIO 
-                                   (ID_USUARIO, NOMBRE, EMAIL, PASSWORD, TELEFONO)
+                                   (IDUSUARIO, NOMBRE, EMAIL, PASSWORD, TELEFONO)
                                    VALUES (:Id, :Nombre, :Email, :Password, :Telefono)";
 
             OracleTransaction transaction = null;
@@ -48,7 +48,7 @@ namespace DAL
                 }
 
                 transaction.Commit();
-                entidad.Id = nuevoId;
+                entidad.IdUsuario = nuevoId;
 
                 response.Estado = true;
                 response.Mensaje = "Usuario registrado exitosamente";
@@ -73,7 +73,7 @@ namespace DAL
             Response<Usuario> response = new Response<Usuario>();
             string query = @"UPDATE USUARIO 
                              SET NOMBRE = :Nombre, EMAIL = :Email, PASSWORD = :Password, TELEFONO = :Telefono
-                             WHERE ID_USUARIO = :Id";
+                             WHERE IDUSUARIO = :Id";
 
             OracleTransaction transaction = null;
 
@@ -89,7 +89,7 @@ namespace DAL
                     command.Parameters.Add(new OracleParameter("Email", entidad.Email));
                     command.Parameters.Add(new OracleParameter("Password", entidad.Password));
                     command.Parameters.Add(new OracleParameter("Telefono", entidad.Telefono ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Id", entidad.Id));
+                    command.Parameters.Add(new OracleParameter("Id", entidad.IdUsuario));
 
                     command.ExecuteNonQuery();
                 }
@@ -116,7 +116,7 @@ namespace DAL
         public Response<Usuario> Eliminar(int id)
         {
             Response<Usuario> response = new Response<Usuario>();
-            string query = "DELETE FROM USUARIO WHERE ID_USUARIO = :Id";
+            string query = "DELETE FROM USUARIO WHERE IDUSUARIO = :Id";
 
             OracleTransaction transaction = null;
 
@@ -153,7 +153,7 @@ namespace DAL
         public Response<Usuario> ObtenerPorId(int id)
         {
             Response<Usuario> response = new Response<Usuario>();
-            string query = "SELECT * FROM USUARIO WHERE ID_USUARIO = :Id";
+            string query = "SELECT * FROM USUARIO WHERE IDUSUARIO = :Id";
 
             try
             {
@@ -197,7 +197,7 @@ namespace DAL
         {
             Response<Usuario> response = new Response<Usuario>();
             List<Usuario> listaUsuarios = new List<Usuario>();
-            string query = "SELECT * FROM USUARIO ORDER BY ID_USUARIO";
+            string query = "SELECT * FROM USUARIO ORDER BY IDUSUARIO";
 
             try
             {
@@ -233,7 +233,7 @@ namespace DAL
         {
             return new Usuario
             {
-                Id = Convert.ToInt32(reader["ID_USUARIO"]),
+                IdUsuario = Convert.ToInt32(reader["IDUSUARIO"]),
                 Nombre = Convert.ToString(reader["NOMBRE"]),
                 Email = Convert.ToString(reader["EMAIL"]),
                 Password = Convert.ToString(reader["PASSWORD"]),

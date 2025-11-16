@@ -14,27 +14,23 @@ namespace DAL
         {
             return new Rentabilidad
             {
-                Id = Convert.ToInt32(reader["ID_RENTABILIDAD"]),
-                IdParcela = Convert.ToInt32(reader["ID_PARCELA"]),
-                PrecioVentaUnitario = reader["PRECIOVENTAUNITARIO"] != DBNull.Value ? Convert.ToDecimal(reader["PRECIOVENTAUNITARIO"]) : (decimal?)null,
-                CostoTotalProduccion = reader["COSTOTOTALPRODUCCION"] != DBNull.Value ? Convert.ToDecimal(reader["COSTOTOTALPRODUCCION"]) : (decimal?)null,
-                CantidadCosechada = reader["CANTIDADCOSECHADA"] != DBNull.Value ? Convert.ToDecimal(reader["CANTIDADCOSECHADA"]) : (decimal?)null,
+                IdRentabilidad = Convert.ToInt32(reader["IDRENTABILIDAD"]),
+                IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
                 IngresoTotal = reader["INGRESOTOTAL"] != DBNull.Value ? Convert.ToDecimal(reader["INGRESOTOTAL"]) : (decimal?)null,
-                RentabilidadPorcentual = reader["RENTABILIDADPORCENTUAL"] != DBNull.Value ? Convert.ToDecimal(reader["RENTABILIDADPORCENTUAL"]) : (decimal?)null,
-                CalidadCosechada = reader["CALIDADCOSECHADA"] != DBNull.Value ? reader["CALIDADCOSECHADA"].ToString() : null
+                CostoTotalProduccion = reader["COSTOTOTALPRODUCCION"] != DBNull.Value ? Convert.ToDecimal(reader["COSTOTOTALPRODUCCION"]) : (decimal?)null,
+                RentabilidadPorcentual = reader["RENTABILIDADPORCENTUAL"] != DBNull.Value ? Convert.ToDecimal(reader["RENTABILIDADPORCENTUAL"]) : (decimal?)null
             };
         }
 
-        // 🟢 INSERTAR
         public Response<Rentabilidad> Insertar(Rentabilidad entidad)
         {
             Response<Rentabilidad> response = new Response<Rentabilidad>();
             string queryId = "SELECT SEQ_RENTABILIDAD.NEXTVAL FROM DUAL";
             string queryInsert = @"INSERT INTO RENTABILIDAD 
-                (ID_RENTABILIDAD, ID_PARCELA, PRECIOVENTAUNITARIO, COSTOTOTALPRODUCCION, 
-                CANTIDADCOSECHADA, INGRESOTOTAL, RENTABILIDADPORCENTUAL, CALIDADCOSECHADA)
-                VALUES (:Id, :IdParcela, :PrecioVentaUnitario, :CostoTotalProduccion, 
-                :CantidadCosechada, :IngresoTotal, :RentabilidadPorcentual, :CalidadCosechada)";
+                (IDRENTABILIDAD, IDPARCELA, INGRESOTOTAL, COSTOTOTALPRODUCCION, 
+                RENTABILIDADPORCENTUAL)
+                VALUES (:Id, :IdParcela, :IngresoTotal, :CostoTotalProduccion, 
+                :RentabilidadPorcentual)";
 
             OracleTransaction transaction = null;
 
@@ -55,18 +51,15 @@ namespace DAL
                     cmd.Transaction = transaction;
                     cmd.Parameters.Add(new OracleParameter("Id", nuevoId));
                     cmd.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
-                    cmd.Parameters.Add(new OracleParameter("PrecioVentaUnitario", entidad.PrecioVentaUnitario ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(new OracleParameter("CantidadCosechada", entidad.CantidadCosechada ?? (object)DBNull.Value));
                     cmd.Parameters.Add(new OracleParameter("IngresoTotal", entidad.IngresoTotal ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
                     cmd.Parameters.Add(new OracleParameter("RentabilidadPorcentual", entidad.RentabilidadPorcentual ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(new OracleParameter("CalidadCosechada", entidad.CalidadCosechada ?? (object)DBNull.Value));
 
                     cmd.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
-                entidad.Id = nuevoId;
+                entidad.IdRentabilidad = nuevoId;
                 response.Estado = true;
                 response.Mensaje = "Rentabilidad registrada exitosamente.";
                 response.Entidad = entidad;
@@ -85,19 +78,15 @@ namespace DAL
             return response;
         }
 
-        // 🟡 ACTUALIZAR
         public Response<Rentabilidad> Actualizar(Rentabilidad entidad)
         {
             Response<Rentabilidad> response = new Response<Rentabilidad>();
             string query = @"UPDATE RENTABILIDAD SET 
-                ID_PARCELA = :IdParcela,
-                PRECIOVENTAUNITARIO = :PrecioVentaUnitario,
-                COSTOTOTALPRODUCCION = :CostoTotalProduccion,
-                CANTIDADCOSECHADA = :CantidadCosechada,
+                IDPARCELA = :IdParcela,
                 INGRESOTOTAL = :IngresoTotal,
-                RENTABILIDADPORCENTUAL = :RentabilidadPorcentual,
-                CALIDADCOSECHADA = :CalidadCosechada
-                WHERE ID_RENTABILIDAD = :Id";
+                COSTOTOTALPRODUCCION = :CostoTotalProduccion,
+                RENTABILIDADPORCENTUAL = :RentabilidadPorcentual
+                WHERE IDRENTABILIDAD = :Id";
 
             OracleTransaction transaction = null;
 
@@ -110,13 +99,10 @@ namespace DAL
                 {
                     cmd.Transaction = transaction;
                     cmd.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
-                    cmd.Parameters.Add(new OracleParameter("PrecioVentaUnitario", entidad.PrecioVentaUnitario ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(new OracleParameter("CantidadCosechada", entidad.CantidadCosechada ?? (object)DBNull.Value));
                     cmd.Parameters.Add(new OracleParameter("IngresoTotal", entidad.IngresoTotal ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("CostoTotalProduccion", entidad.CostoTotalProduccion ?? (object)DBNull.Value));
                     cmd.Parameters.Add(new OracleParameter("RentabilidadPorcentual", entidad.RentabilidadPorcentual ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(new OracleParameter("CalidadCosechada", entidad.CalidadCosechada ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(new OracleParameter("Id", entidad.Id));
+                    cmd.Parameters.Add(new OracleParameter("Id", entidad.IdRentabilidad));
 
                     cmd.ExecuteNonQuery();
                 }
@@ -140,11 +126,10 @@ namespace DAL
             return response;
         }
 
-        // 🔴 ELIMINAR
         public Response<Rentabilidad> Eliminar(int id)
         {
             Response<Rentabilidad> response = new Response<Rentabilidad>();
-            string query = "DELETE FROM RENTABILIDAD WHERE ID_RENTABILIDAD = :Id";
+            string query = "DELETE FROM RENTABILIDAD WHERE IDRENTABILIDAD = :Id";
 
             try
             {
@@ -172,11 +157,10 @@ namespace DAL
             return response;
         }
 
-        // 🔍 OBTENER POR ID
         public Response<Rentabilidad> ObtenerPorId(int id)
         {
             Response<Rentabilidad> response = new Response<Rentabilidad>();
-            string query = "SELECT * FROM RENTABILIDAD WHERE ID_RENTABILIDAD = :Id";
+            string query = "SELECT * FROM RENTABILIDAD WHERE IDRENTABILIDAD = :Id";
 
             try
             {
@@ -215,12 +199,11 @@ namespace DAL
             return response;
         }
 
-        // 📋 OBTENER TODOS
         public Response<Rentabilidad> ObtenerTodos()
         {
             Response<Rentabilidad> response = new Response<Rentabilidad>();
             List<Rentabilidad> lista = new List<Rentabilidad>();
-            string query = "SELECT * FROM RENTABILIDAD ORDER BY ID_RENTABILIDAD";
+            string query = "SELECT * FROM RENTABILIDAD ORDER BY IDRENTABILIDAD";
 
             try
             {
@@ -258,9 +241,9 @@ namespace DAL
         //public Response<Rentabilidad> CalcularRentabilidadPorParcela(int idParcela)
         //{
         //    Response<Rentabilidad> response = new Response<Rentabilidad>();
-        //    string query = @"SELECT ID_RENTABILIDAD, 
+        //    string query = @"SELECT IDRENTABILIDAD, 
         //                            (INGRESOTOTAL - COSTOTOTALPRODUCCION) / COSTOTOTALPRODUCCION * 100 AS RENTABILIDAD_CALCULADA
-        //                     FROM RENTABILIDAD WHERE ID_PARCELA = :IdParcela";
+        //                     FROM RENTABILIDAD WHERE IDPARCELA = :IdParcela";
 
         //    try
         //    {

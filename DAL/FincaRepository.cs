@@ -1,34 +1,33 @@
-﻿using System;
+﻿using ENTITY;
+using Oracle.ManagedDataAccess.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ENTITY;
-using Oracle.ManagedDataAccess.Client;
 
 namespace DAL
 {
-    public class SensorRepository : ConexionOracle, IRepository<Sensor>
+    public class FincaRepository : ConexionOracle, IRepository<Finca>
     {
-        private Sensor Mapear(OracleDataReader reader)
+        private Finca Mapear(OracleDataReader reader)
         {
-            return new Sensor
+            return new Finca
             {
-                Id = Convert.ToInt32(reader["ID_SENSOR"]),
-                IdParcela = Convert.ToInt32(reader["ID_PARCELA"]),
-                EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1",
-                FrecuenciaLectura = reader["FRECUENCIALECTURA"] != DBNull.Value ? Convert.ToInt32(reader["FRECUENCIALECTURA"]) : (int?)null,
-                HumedadActual = reader["HUMEDADACTUAL"] != DBNull.Value ? Convert.ToDecimal(reader["HUMEDADACTUAL"]) : (decimal?)null
+                Id = Convert.ToInt32(reader["IDFINCA"]),
+                IdUsuario = Convert.ToInt32(reader["IDUSUARIO"]),
+                AreaCalculada = reader["AREACALCULADA"] != DBNull.Value ? Convert.ToDouble(reader["AREACALCULADA"]) : (double?)null,
+                Poligono = reader["POLIGONO"] != DBNull.Value ? reader["POLIGONO"].ToString() : null
             };
         }
 
-        public Response<Sensor> Insertar(Sensor entidad)
+        public Response<Finca> Insertar(Finca entidad)
         {
-            Response<Sensor> response = new Response<Sensor>();
+            Response<Finca> response = new Response<Finca>();
 
-            string queryId = "SELECT SEQ_SENSOR.NEXTVAL FROM DUAL";
-            string queryInsert = "INSERT INTO SENSOR (ID_SENSOR, ID_PARCELA, ESTADO, FRECUENCIALECTURA, HUMEDADACTUAL) " +
-                                 "VALUES (:Id, :IdParcela, :Estado, :FrecuenciaLectura, :HumedadActual)";
+            string queryId = "SELECT SEQ_FINCA.NEXTVAL FROM DUAL";
+            string queryInsert = @"INSERT INTO FINCA (IDFINCA, IDUSUARIO, AREACALCULADA, POLIGONO)
+                                   VALUES (:Id, :IdUsuario, :AreaCalculada, :Poligono)";
 
             OracleTransaction transaction = null;
 
@@ -48,10 +47,12 @@ namespace DAL
                 {
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
-                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar));
-                    command.Parameters.Add(new OracleParameter("FrecuenciaLectura", entidad.FrecuenciaLectura ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("HumedadActual", entidad.HumedadActual ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("IdUsuario", entidad.IdUsuario));
+                    command.Parameters.Add(new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Poligono", OracleDbType.Clob)
+                    {
+                        Value = entidad.Poligono ?? (object)DBNull.Value
+                    });
 
                     command.ExecuteNonQuery();
                 }
@@ -59,14 +60,14 @@ namespace DAL
                 transaction.Commit();
                 entidad.Id = nuevoId;
                 response.Estado = true;
-                response.Mensaje = "Sensor registrado exitosamente";
+                response.Mensaje = "Finca registrada exitosamente";
                 response.Entidad = entidad;
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error al insertar sensor: " + ex.Message;
+                response.Mensaje = "Error al insertar finca: " + ex.Message;
             }
             finally
             {
@@ -76,12 +77,14 @@ namespace DAL
             return response;
         }
 
-        public Response<Sensor> Actualizar(Sensor entidad)
+        public Response<Finca> Actualizar(Finca entidad)
         {
-            Response<Sensor> response = new Response<Sensor>();
-            string query = "UPDATE SENSOR SET ID_PARCELA = :IdParcela, ESTADO = :Estado, " +
-                           "FRECUENCIALECTURA = :FrecuenciaLectura, HUMEDADACTUAL = :HumedadActual " +
-                           "WHERE ID_SENSOR = :Id";
+            Response<Finca> response = new Response<Finca>();
+            string query = @"UPDATE FINCA SET 
+                             IDUSUARIO = :IdUsuario,
+                             AREACALCULADA = :AreaCalculada,
+                             POLIGONO = :Poligono
+                             WHERE IDFINCA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -93,10 +96,12 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(query, conexion))
                 {
                     command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar));
-                    command.Parameters.Add(new OracleParameter("FrecuenciaLectura", entidad.FrecuenciaLectura ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("HumedadActual", entidad.HumedadActual ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("IdUsuario", entidad.IdUsuario));
+                    command.Parameters.Add(new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Poligono", OracleDbType.Clob)
+                    {
+                        Value = entidad.Poligono ?? (object)DBNull.Value
+                    });
                     command.Parameters.Add(new OracleParameter("Id", entidad.Id));
 
                     command.ExecuteNonQuery();
@@ -104,14 +109,14 @@ namespace DAL
 
                 transaction.Commit();
                 response.Estado = true;
-                response.Mensaje = "Sensor actualizado exitosamente";
+                response.Mensaje = "Finca actualizada exitosamente";
                 response.Entidad = entidad;
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error al actualizar sensor: " + ex.Message;
+                response.Mensaje = "Error al actualizar finca: " + ex.Message;
             }
             finally
             {
@@ -121,10 +126,10 @@ namespace DAL
             return response;
         }
 
-        public Response<Sensor> Eliminar(int id)
+        public Response<Finca> Eliminar(int id)
         {
-            Response<Sensor> response = new Response<Sensor>();
-            string query = "DELETE FROM SENSOR WHERE ID_SENSOR = :Id";
+            Response<Finca> response = new Response<Finca>();
+            string query = "DELETE FROM FINCA WHERE IDFINCA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -142,13 +147,13 @@ namespace DAL
 
                 transaction.Commit();
                 response.Estado = true;
-                response.Mensaje = "Sensor eliminado exitosamente";
+                response.Mensaje = "Finca eliminada exitosamente";
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error al eliminar sensor: " + ex.Message;
+                response.Mensaje = "Error al eliminar finca: " + ex.Message;
             }
             finally
             {
@@ -158,10 +163,10 @@ namespace DAL
             return response;
         }
 
-        public Response<Sensor> ObtenerPorId(int id)
+        public Response<Finca> ObtenerPorId(int id)
         {
-            Response<Sensor> response = new Response<Sensor>();
-            string query = "SELECT * FROM SENSOR WHERE ID_SENSOR = :Id";
+            Response<Finca> response = new Response<Finca>();
+            string query = "SELECT * FROM FINCA WHERE IDFINCA = :Id";
 
             try
             {
@@ -176,13 +181,13 @@ namespace DAL
                         if (reader.Read())
                         {
                             response.Estado = true;
-                            response.Mensaje = "Sensor encontrado";
+                            response.Mensaje = "Finca encontrada";
                             response.Entidad = Mapear(reader);
                         }
                         else
                         {
                             response.Estado = false;
-                            response.Mensaje = "Sensor no encontrado";
+                            response.Mensaje = "Finca no encontrada";
                         }
                     }
                 }
@@ -190,7 +195,7 @@ namespace DAL
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error al obtener sensor: " + ex.Message;
+                response.Mensaje = "Error al obtener finca: " + ex.Message;
             }
             finally
             {
@@ -200,11 +205,11 @@ namespace DAL
             return response;
         }
 
-        public Response<Sensor> ObtenerTodos()
+        public Response<Finca> ObtenerTodos()
         {
-            Response<Sensor> response = new Response<Sensor>();
-            List<Sensor> listaSensores = new List<Sensor>();
-            string query = "SELECT * FROM SENSOR ORDER BY ID_SENSOR";
+            Response<Finca> response = new Response<Finca>();
+            List<Finca> listaFincas = new List<Finca>();
+            string query = "SELECT * FROM FINCA ORDER BY IDFINCA";
 
             try
             {
@@ -216,21 +221,21 @@ namespace DAL
                     {
                         while (reader.Read())
                         {
-                            listaSensores.Add(Mapear(reader));
+                            listaFincas.Add(Mapear(reader));
                         }
                     }
                 }
 
                 response.Estado = true;
-                response.Mensaje = listaSensores.Count > 0
-                    ? $"Se encontraron {listaSensores.Count} sensores"
-                    : "No hay sensores registrados";
-                response.Lista = listaSensores;
+                response.Mensaje = listaFincas.Count > 0
+                    ? $"Se encontraron {listaFincas.Count} fincas"
+                    : "No hay fincas registradas";
+                response.Lista = listaFincas;
             }
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error al obtener sensores: " + ex.Message;
+                response.Mensaje = "Error al obtener fincas: " + ex.Message;
             }
             finally
             {

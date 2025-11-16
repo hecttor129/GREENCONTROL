@@ -32,7 +32,7 @@ namespace BLL
 
         public bool Eliminar(Historial entidad)
         {
-            var response = historialRepository.Eliminar(entidad.Id);
+            var response = historialRepository.Eliminar(entidad.IdHistorial);
             return response.Estado;
         }
 

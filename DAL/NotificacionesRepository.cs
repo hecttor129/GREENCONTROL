@@ -15,13 +15,14 @@ namespace DAL
         {
             return new Notificaciones
             {
-                Id = Convert.ToInt32(reader["ID_NOTIFICACIONES"]),
-                IdUsuario = Convert.ToInt32(reader["ID_USUARIO"]),
-                Titulo = reader["TITULO"] != DBNull.Value ? reader["TITULO"].ToString() : null,
-                Mensaje = reader["MENSAJE"] != DBNull.Value ? reader["MENSAJE"].ToString() : null,
-                FechaEnvio = reader["FECHAENVIO"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAENVIO"]) : DateTime.Now,
+                IdNotificacion = Convert.ToInt32(reader["IDNOTIFICACION"]),
+                IdUsuario = Convert.ToInt32(reader["IDUSUARIO"]),
+                IdParcela = reader["IDPARCELA"] != DBNull.Value ? Convert.ToInt32(reader["IDPARCELA"]) : (int?)null,
                 Tipo = reader["TIPO"] != DBNull.Value ? reader["TIPO"].ToString() : null,
-                Leido = reader["LEIDO"] != DBNull.Value && reader["LEIDO"].ToString() == "1"
+                Mensaje = reader["MENSAJE"] != DBNull.Value ? reader["MENSAJE"].ToString() : null,
+                Titulo = reader["TITULO"] != DBNull.Value ? reader["TITULO"].ToString() : null,
+                FechaEnvio = reader["FECHAENVIO"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAENVIO"]) : DateTime.Now,
+                LeidoChar = reader["LEIDO"] != DBNull.Value ? reader["LEIDO"].ToString() : "0"
             };
         }
 
@@ -31,8 +32,8 @@ namespace DAL
 
             string queryId = "SELECT SEQ_NOTIFICACIONES.NEXTVAL FROM DUAL";
             string queryInsert = @"INSERT INTO NOTIFICACIONES 
-                (ID_NOTIFICACIONES, ID_USUARIO, TITULO, MENSAJE, FECHAENVIO, TIPO, LEIDO)
-                VALUES (:Id, :IdUsuario, :Titulo, :Mensaje, :FechaEnvio, :Tipo, :Leido)";
+                (IDNOTIFICACION, IDUSUARIO, IDPARCELA, TIPO, MENSAJE, TITULO, FECHAENVIO, LEIDO)
+                VALUES (:Id, :IdUsuario, :IdParcela, :Tipo, :Mensaje, :Titulo, :FechaEnvio, :Leido)";
 
             OracleTransaction transaction = null;
 
@@ -53,17 +54,21 @@ namespace DAL
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
                     command.Parameters.Add(new OracleParameter("IdUsuario", entidad.IdUsuario));
-                    command.Parameters.Add(new OracleParameter("Titulo", entidad.Titulo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Mensaje", entidad.Mensaje ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaEnvio", entidad.FechaEnvio));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Leido", entidad.Leido ? "1" : "0"));
+                    command.Parameters.Add(new OracleParameter("Mensaje", OracleDbType.Clob)
+                    {
+                        Value = entidad.Mensaje ?? (object)DBNull.Value
+                    });
+                    command.Parameters.Add(new OracleParameter("Titulo", entidad.Titulo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaEnvio", entidad.FechaEnvio));
+                    command.Parameters.Add(new OracleParameter("Leido", entidad.LeidoChar ?? (object)DBNull.Value));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
-                entidad.Id = nuevoId;
+                entidad.IdNotificacion = nuevoId;
                 response.Estado = true;
                 response.Mensaje = "Notificación registrada exitosamente";
                 response.Entidad = entidad;
@@ -87,13 +92,14 @@ namespace DAL
             Response<Notificaciones> response = new Response<Notificaciones>();
 
             string query = @"UPDATE NOTIFICACIONES SET 
-                ID_USUARIO = :IdUsuario,
-                TITULO = :Titulo,
-                MENSAJE = :Mensaje,
-                FECHAENVIO = :FechaEnvio,
+                IDUSUARIO = :IdUsuario,
+                IDPARCELA = :IdParcela,
                 TIPO = :Tipo,
+                MENSAJE = :Mensaje,
+                TITULO = :Titulo,
+                FECHAENVIO = :FechaEnvio,
                 LEIDO = :Leido
-                WHERE ID_NOTIFICACIONES = :Id";
+                WHERE IDNOTIFICACION = :Id";
 
             OracleTransaction transaction = null;
 
@@ -106,12 +112,16 @@ namespace DAL
                 {
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("IdUsuario", entidad.IdUsuario));
-                    command.Parameters.Add(new OracleParameter("Titulo", entidad.Titulo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Mensaje", entidad.Mensaje ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaEnvio", entidad.FechaEnvio));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Leido", entidad.Leido ? "1" : "0"));
-                    command.Parameters.Add(new OracleParameter("Id", entidad.Id));
+                    command.Parameters.Add(new OracleParameter("Mensaje", OracleDbType.Clob)
+                    {
+                        Value = entidad.Mensaje ?? (object)DBNull.Value
+                    });
+                    command.Parameters.Add(new OracleParameter("Titulo", entidad.Titulo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaEnvio", entidad.FechaEnvio));
+                    command.Parameters.Add(new OracleParameter("Leido", entidad.LeidoChar ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Id", entidad.IdNotificacion));
 
                     command.ExecuteNonQuery();
                 }
@@ -138,7 +148,7 @@ namespace DAL
         public Response<Notificaciones> Eliminar(int id)
         {
             Response<Notificaciones> response = new Response<Notificaciones>();
-            string query = "DELETE FROM NOTIFICACIONES WHERE ID_NOTIFICACIONES = :Id";
+            string query = "DELETE FROM NOTIFICACIONES WHERE IDNOTIFICACION = :Id";
 
             OracleTransaction transaction = null;
 
@@ -175,7 +185,7 @@ namespace DAL
         public Response<Notificaciones> ObtenerPorId(int id)
         {
             Response<Notificaciones> response = new Response<Notificaciones>();
-            string query = "SELECT * FROM NOTIFICACIONES WHERE ID_NOTIFICACIONES = :Id";
+            string query = "SELECT * FROM NOTIFICACIONES WHERE IDNOTIFICACION = :Id";
 
             try
             {
@@ -256,7 +266,7 @@ namespace DAL
         //{
         //    Response<Notificaciones> response = new Response<Notificaciones>();
         //    List<Notificaciones> lista = new List<Notificaciones>();
-        //    string query = "SELECT * FROM NOTIFICACIONES WHERE ID_USUARIO = :IdUsuario ORDER BY FECHAENVIO DESC";
+        //    string query = "SELECT * FROM NOTIFICACIONES WHERE IDUSUARIO = :IdUsuario ORDER BY FECHAENVIO DESC";
 
         //    try
         //    {
@@ -297,7 +307,7 @@ namespace DAL
         //public Response<Notificaciones> MarcarComoLeida(int id)
         //{
         //    Response<Notificaciones> response = new Response<Notificaciones>();
-        //    string query = "UPDATE NOTIFICACIONES SET LEIDO = '1' WHERE ID_NOTIFICACIONES = :Id";
+        //    string query = "UPDATE NOTIFICACIONES SET LEIDO = '1' WHERE IDNOTIFICACION = :Id";
 
         //    try
         //    {
@@ -332,8 +342,8 @@ namespace DAL
         //    Response<Notificaciones> response = new Response<Notificaciones>();
         //    List<Notificaciones> lista = new List<Notificaciones>();
         //    string query = @"SELECT * FROM NOTIFICACIONES 
-        //             WHERE ID_USUARIO = :IdUsuario AND LEIDO = '0'
-        //             ORDER BY FECHAENVIO DESC";
+        //     WHERE IDUSUARIO = :IdUsuario AND LEIDO = '0'
+        //     ORDER BY FECHAENVIO DESC";
 
         //    try
         //    {
@@ -370,8 +380,5 @@ namespace DAL
 
         //    return response;
         //}
-
-
-
     }
 }

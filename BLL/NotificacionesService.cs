@@ -32,7 +32,7 @@ namespace BLL
 
         public bool Eliminar(Notificaciones entidad)
         {
-            var response = notificacionesRepository.Eliminar(entidad.Id);
+            var response = notificacionesRepository.Eliminar(entidad.IdNotificacion);
             return response.Estado;
         }
 

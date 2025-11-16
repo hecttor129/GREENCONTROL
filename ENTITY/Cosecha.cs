@@ -8,27 +8,26 @@ namespace ENTITY
     public class Cosecha
     {
         [Key]
-        [Column("ID_COSECHA")]
+        [Column("IDCosecha")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Column("ID_SIEMBRA")]
+        [Column("idParcela")]
         [Required]
-        public int IdSiembra { get; set; }
+        public int IdParcela { get; set; }
 
-        [Column("ESTADO")]
-        [StringLength(1)]
-        public string Estado { get; set; } = "0";
+        [Column("calidadCosechada")]
+        public int? CalidadCosechada { get; set; }
 
-        [Column("CALIDAD")]
-        public int? Calidad { get; set; } = 1;
+        [Column("cantidadCosechada")]
+        public decimal? CantidadCosechada { get; set; }
 
-        [Column("CANTIDAD")]
-        public decimal? Cantidad { get; set; }
+        [Column("PrecioVentaUnitario")]
+        public decimal? PrecioVentaUnitario { get; set; }
 
-        // 🔗 Relación opcional con Siembra
-        [ForeignKey("IdSiembra")]
-        public Siembra? Siembra { get; set; }
+        [ForeignKey("IdParcela")]
+        public virtual Parcela? Parcela { get; set; }
     }
 }
+
 

@@ -42,7 +42,7 @@ namespace BLL
         }
         public bool Eliminar(Tareas entidad)
         {
-            var response = tareasRepository.Eliminar(entidad.Id);
+            var response = tareasRepository.Eliminar(entidad.IdTarea);
             return response.Estado;
         }
         public ReadOnlyCollection<Tareas> Consultar()
@@ -62,7 +62,7 @@ namespace BLL
         public bool CompletarTarea(int idTarea)
         {
             var tarea = tareasRepository.ObtenerPorId(idTarea).Entidad;
-            if (tarea != null)
+            if (tarea == null)
             {
                 return false;
             }
@@ -74,10 +74,11 @@ namespace BLL
             var response = tareasRepository.Actualizar(tarea);
             return response.Estado;
         }
+
         public bool ReabrirTarea(int idTarea)
         {
             var tarea = tareasRepository.ObtenerPorId(idTarea).Entidad;
-            if (tarea != null)
+            if (tarea == null)
             {
                 return false;
             }
@@ -88,10 +89,13 @@ namespace BLL
             var response = tareasRepository.Actualizar(tarea);
             return response.Estado;
         }
-        private int ObtenerUrgenciaTarea(DateTime fechaTarea)
+        private int ObtenerUrgenciaTarea(DateTime? fechaTarea)
         {
+            if (!fechaTarea.HasValue)
+                return 1;
+
             DateTime fechaActual = DateTime.Now;
-            int diferencia = (int)(fechaTarea - fechaActual).TotalDays;
+            int diferencia = (int)(fechaTarea.Value - fechaActual).TotalDays;
             if (diferencia <= 3 && diferencia > 0)
             {
                 return 3;
@@ -124,7 +128,7 @@ namespace BLL
                 return "La fecha de la tarea no puede superar los dos años permitidos.";
 
             // Tipo de tarea
-            if (!ValidarTipoTarea(entidad.TipoTarea))
+            if (!ValidarTipoTarea(entidad.Tipo))
                 return "El tipo de tarea es inválido. Solo puede contener letras, espacios y máximo 20 caracteres.";
 
             // Costo
@@ -142,21 +146,21 @@ namespace BLL
 
             if (parcela != null)
             {
-                return true; 
+                return true;
             }
-            return false;      
+            return false;
         }
-        private bool ValidarFechaEstipuladaTarea(DateTime fechaTarea)
+        private bool ValidarFechaEstipuladaTarea(DateTime? fechaTarea)
         {
-            if (fechaTarea < DateTime.Now)
+            if (!fechaTarea.HasValue || fechaTarea.Value < DateTime.Now)
             {
                 return false;
             }
             return true;
         }
-        private bool ValidarCostoTarea(decimal costoTarea)
+        private bool ValidarCostoTarea(decimal? costoTarea)
         {
-            if (costoTarea < 0)
+            if (costoTarea.HasValue && costoTarea.Value < 0)
             {
                 return false;
             }
@@ -175,20 +179,15 @@ namespace BLL
 
             return true;
         }
-        private bool ValidarMaximaFechaTarea(DateTime fecha)
+        private bool ValidarMaximaFechaTarea(DateTime? fecha)
         {
-            if (fecha < DateTime.Today)
+            if (!fecha.HasValue || fecha.Value < DateTime.Today)
                 return false;
 
-            if (fecha > DateTime.Today.AddYears(2))
+            if (fecha.Value > DateTime.Today.AddYears(2))
                 return false;
 
             return true;
         }
-
-
-   
-
-    
     }
 }

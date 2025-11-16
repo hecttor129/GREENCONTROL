@@ -15,9 +15,14 @@ namespace DAL
             Response<Cosecha> response = new Response<Cosecha>();
 
             string queryId = "SELECT SEQ_COSECHA.NEXTVAL FROM DUAL";
-            string queryInsert = @"
-                INSERT INTO COSECHA (ID_COSECHA, ID_SIEMBRA, ESTADO, CALIDAD, CANTIDAD)
-                VALUES (:Id, :IdSiembra, :Estado, :Calidad, :Cantidad)";
+
+            string queryInsert = @"INSERT INTO COSECHA (
+                    IDCOSECHA, IDPARCELA,
+                    CALIDADCOSECHADA, CANTIDADCOSECHADA, PRECIOVENTAUNITARIO
+                ) VALUES (
+                    :Id, :IdParcela,
+                    :Calidad, :Cantidad, :Precio
+                )";
 
             OracleTransaction transaction = null;
 
@@ -36,15 +41,12 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(queryInsert, conexion))
                 {
                     command.Transaction = transaction;
+
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
-                    command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
-
-                    command.Parameters.Add(new OracleParameter("Calidad",
-                        entidad.Calidad.HasValue ? (object)entidad.Calidad.Value : DBNull.Value));
-
-                    command.Parameters.Add(new OracleParameter("Cantidad",
-                        entidad.Cantidad.HasValue ? (object)entidad.Cantidad.Value : DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
+                    command.Parameters.Add(new OracleParameter("Calidad", entidad.CalidadCosechada ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Cantidad", entidad.CantidadCosechada ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Precio", entidad.PrecioVentaUnitario ?? (object)DBNull.Value));
 
                     command.ExecuteNonQuery();
                 }
@@ -75,13 +77,12 @@ namespace DAL
         {
             Response<Cosecha> response = new Response<Cosecha>();
 
-            string query = @"
-                UPDATE COSECHA SET 
-                    ID_SIEMBRA = :IdSiembra,
-                    ESTADO = :Estado,
-                    CALIDAD = :Calidad,
-                    CANTIDAD = :Cantidad
-                WHERE ID_COSECHA = :Id";
+            string query = @"UPDATE COSECHA SET 
+                    IDPARCELA = :IdParcela,
+                    CALIDADCOSECHADA = :Calidad,
+                    CANTIDADCOSECHADA = :Cantidad,
+                    PRECIOVENTAUNITARIO = :Precio
+                WHERE IDCOSECHA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -93,14 +94,11 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(query, conexion))
                 {
                     command.Transaction = transaction;
-                    command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
 
-                    command.Parameters.Add(new OracleParameter("Calidad",
-                        entidad.Calidad.HasValue ? (object)entidad.Calidad.Value : DBNull.Value));
-
-                    command.Parameters.Add(new OracleParameter("Cantidad",
-                        entidad.Cantidad.HasValue ? (object)entidad.Cantidad.Value : DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
+                    command.Parameters.Add(new OracleParameter("Calidad", entidad.CalidadCosechada ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Cantidad", entidad.CantidadCosechada ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Precio", entidad.PrecioVentaUnitario ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Id", entidad.Id));
 
                     command.ExecuteNonQuery();
@@ -130,7 +128,7 @@ namespace DAL
         public Response<Cosecha> Eliminar(int id)
         {
             Response<Cosecha> response = new Response<Cosecha>();
-            string query = "DELETE FROM COSECHA WHERE ID_COSECHA = :Id";
+            string query = "DELETE FROM COSECHA WHERE IDCOSECHA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -169,7 +167,7 @@ namespace DAL
         public Response<Cosecha> ObtenerPorId(int id)
         {
             Response<Cosecha> response = new Response<Cosecha>();
-            string query = "SELECT * FROM COSECHA WHERE ID_COSECHA = :Id";
+            string query = "SELECT * FROM COSECHA WHERE IDCOSECHA = :Id";
 
             try
             {
@@ -213,7 +211,7 @@ namespace DAL
         {
             Response<Cosecha> response = new Response<Cosecha>();
             List<Cosecha> lista = new List<Cosecha>();
-            string query = "SELECT * FROM COSECHA ORDER BY ID_COSECHA DESC";
+            string query = "SELECT * FROM COSECHA ORDER BY IDCOSECHA DESC";
 
             try
             {
@@ -252,17 +250,11 @@ namespace DAL
         {
             return new Cosecha
             {
-                Id = Convert.ToInt32(reader["ID_COSECHA"]),
-                IdSiembra = Convert.ToInt32(reader["ID_SIEMBRA"]),
-                Estado = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1",
-
-                Calidad = reader["CALIDAD"] != DBNull.Value
-                            ? Convert.ToInt32(reader["CALIDAD"])
-                            : (int?)null,
-
-                Cantidad = reader["CANTIDAD"] != DBNull.Value
-                            ? Convert.ToDecimal(reader["CANTIDAD"])
-                            : (decimal?)null
+                Id = Convert.ToInt32(reader["IDCOSECHA"]),
+                IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
+                CalidadCosechada = reader["CALIDADCOSECHADA"] != DBNull.Value ? Convert.ToInt32(reader["CALIDADCOSECHADA"]) : (int?)null,
+                CantidadCosechada = reader["CANTIDADCOSECHADA"] != DBNull.Value ? Convert.ToDecimal(reader["CANTIDADCOSECHADA"]) : (decimal?)null,
+                PrecioVentaUnitario = reader["PRECIOVENTAUNITARIO"] != DBNull.Value ? Convert.ToDecimal(reader["PRECIOVENTAUNITARIO"]) : (decimal?)null
             };
         }
     }

@@ -5,67 +5,77 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ENTITY
 {
     [Table("HISTORIAL")]
-    public class Historial 
+    public class Historial
     {
         [Key]
-        [Column("id_historial")]
+        [Column("IDHISTORIAL")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int IdHistorial { get; set; }
 
-        [Column("id_parcela")]
-        [Required]
-        public int IdParcela { get; set; }
+        [Column("IDPARCELA")]
+        public int? IdParcela { get; set; }
 
-        [Column("HFechaSiembra")]
-        [Required]
-        public DateTime HFechaSiembra { get; set; }
+        [Column("FECHACOSECHA")]
+        public DateTime? FechaCosecha { get; set; }
 
-        [Column("HFechaCosecha")]
-        public DateTime? HFechaCosecha { get; set; }
+        [Column("FECHASIEMBRA")]
+        public DateTime? FechaSiembra { get; set; }
 
-        [Column("DuracionCiclo")]
-        public int? DuracionCiclo { get; set; }
-
-        [Column("EtapaActual")]
+        [Column("ETAPAACTUAL")]
         [StringLength(20)]
         public string EtapaActual { get; set; }
 
-        [Column("RegistroInsumos", TypeName = "CLOB")]
-        public string RegistroInsumos { get; set; }
+        [Column("CALIDADCOSECHADA")]
+        public int? CalidadCosechada { get; set; }
 
-        [Column("RegistroTareas", TypeName = "CLOB")]
-        public string RegistroTareas { get; set; }
+        [Column("CANTIDADCOSECHADA")]
+        public decimal? CantidadCosechada { get; set; }
 
-        [ForeignKey("IdParcela")]
-        public Parcela Parcela { get; set; }
+        [Column("DURACIONCICLO")]
+        public int? DuracionCiclo { get; set; }
 
-        // 🔹 Constructores
-        //public Historial() { }
+        [Column("NOMBRECULTIVO")]
+        [StringLength(20)]
+        public string NombreCultivo { get; set; }
 
-        //public Historial(int id, int idParcela, DateTime hFechaSiembra, DateTime? hFechaCosecha,
-        //                 int? duracionCiclo, string etapaActual, string registroInsumos, string registroTareas)
-        //{
-        //    Id = id;
-        //    IdParcela = idParcela;
-        //    HFechaSiembra = hFechaSiembra;
-        //    HFechaCosecha = hFechaCosecha;
-        //    DuracionCiclo = duracionCiclo;
-        //    EtapaActual = etapaActual;
-        //    RegistroInsumos = registroInsumos;
-        //    RegistroTareas = registroTareas;
-        //}
+        [Column("NOMBREPARCELA")]
+        [StringLength(20)]
+        public string NombreParcela { get; set; }
 
-        //public Historial(int idParcela, DateTime hFechaSiembra, DateTime? hFechaCosecha,
-        //                 int? duracionCiclo, string etapaActual, string registroInsumos, string registroTareas)
-        //{
-        //    IdParcela = idParcela;
-        //    HFechaSiembra = hFechaSiembra;
-        //    HFechaCosecha = hFechaCosecha;
-        //    DuracionCiclo = duracionCiclo;
-        //    EtapaActual = etapaActual;
-        //    RegistroInsumos = registroInsumos;
-        //    RegistroTareas = registroTareas;
-        //}
+        [Column("TIPOSUELO")]
+        [StringLength(25)]
+        public string TipoSuelo { get; set; }
+
+        [Column("PHSUELO")]
+        public decimal? PhSuelo { get; set; }
+
+        [Column("ESTADO")]
+        [StringLength(1)]
+        public string EstadoChar { get; set; }
+
+        [NotMapped]
+        public bool Estado
+        {
+            get => EstadoChar == "1";
+            set => EstadoChar = value ? "1" : "0";
+        }
+
+        [Column("COSTOTOTALPRODUCCION")]
+        public decimal? CostoTotalProduccion { get; set; }
+
+        [Column("INGRESOTOTAL")]
+        public decimal? IngresoTotal { get; set; }
+
+        [Column("RENTABILIDADFINAL")]
+        public decimal? RentabilidadFinal { get; set; }
+
+        [Column("FECHASNAPSHOT")]
+        public DateTime? FechaSnapshot { get; set; }
+
+        // Nota: Historial NO tiene ForeignKey a Parcela (sobrevive por sí solo)
+        // Solo guarda el IdParcela como dato histórico
+
+        public Historial() { }
     }
 }
 

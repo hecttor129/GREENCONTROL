@@ -11,20 +11,18 @@ namespace BLL
 {
     public class CosechaService : ICrudEscritura<Cosecha>, ICrudLectura<Cosecha>
     {
-
         private readonly CosechaRepository cosechaRepository;
-        private readonly SiembraRepository siembraRepository;
+        private readonly ParcelaRepository parcelaRepository;
 
         public CosechaService()
         {
             cosechaRepository = new CosechaRepository();
-            siembraRepository = new SiembraRepository();
+            parcelaRepository = new ParcelaRepository();
         }
 
         public string Guardar(Cosecha entidad)
         {
             string validacion = Validar(entidad);
-
             if (validacion != null)
                 return validacion;
 
@@ -35,7 +33,6 @@ namespace BLL
         public bool Actualizar(Cosecha entidad)
         {
             string validacion = Validar(entidad);
-
             if (validacion != null)
                 return false;
 
@@ -64,47 +61,25 @@ namespace BLL
 
         private string Validar(Cosecha entidad)
         {
-            if (entidad.IdSiembra <= 0)
-                return "Debe seleccionar una siembra valida.";
+            if (entidad.IdParcela <= 0)
+                return "Debe seleccionar una parcela válida.";
 
-            var siembra = siembraRepository.ObtenerPorId(entidad.IdSiembra);
-            if (siembra.Entidad == null)
-                return "La siembra seleccionada no existe.";
-         
-            if (entidad.Id > 0)
-            {
-                var cosechaExistente = cosechaRepository.ObtenerPorId(entidad.Id).Entidad;
+            if (parcelaRepository.ObtenerPorId(entidad.IdParcela).Entidad == null)
+                return "La parcela seleccionada no existe.";
 
-                if (cosechaExistente != null)
-                {
-                    if (cosechaExistente.Estado == "1")
-                    {
-                        return "La cosecha ya esta completada/inactiva y no puede modificarse.";
-                    }
+            if (entidad.CalidadCosechada.HasValue &&
+                (entidad.CalidadCosechada < 1 || entidad.CalidadCosechada > 5))
+                return "La calidad debe estar entre 1 y 5.";
 
-                    entidad.Estado = "1";
-                
-                }
+            if (entidad.CantidadCosechada.HasValue &&
+                entidad.CantidadCosechada <= 0)
+                return "La cantidad debe ser mayor que cero.";
 
-                if (cosechaExistente == null)
-                    return "La cosecha que intenta actualizar no existe.";
-            }
-
-            if (entidad.Calidad.HasValue)
-            {
-                if (entidad.Calidad < 1 || entidad.Calidad > 5)
-                    return "La calidad debe estar entre 1 y 5 estrellas.";
-            }
-
-            if (entidad.Cantidad.HasValue && entidad.Cantidad <= 0)
-                return "La cantidad debe ser un número mayor que cero.";
+            if (entidad.PrecioVentaUnitario.HasValue &&
+                entidad.PrecioVentaUnitario < 0)
+                return "El precio no puede ser negativo.";
 
             return null;
         }
-
-
-
-
-
     }
 }

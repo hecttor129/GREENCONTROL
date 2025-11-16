@@ -8,49 +8,87 @@ using System.Threading.Tasks;
 
 namespace ENTITY
 {
+    [Table("SIEMBRA")]
     public class Siembra
     {
-            [Key]
-            [Column("ID_SIEMBRA")]
-            [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-            public int Id { get; set; }
+        [Key]
+        [Column("IDSIEMBRA")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int IdSiembra { get; set; }
 
-            [ForeignKey("Parcela")]
-            [Column("ID_PARCELA")]
-            public int IdParcela { get; set; }
+        [Required]
+        [ForeignKey("Parcela")]
+        [Column("IDPARCELA")]
+        public int IdParcela { get; set; }
 
-            [ForeignKey("Cultivo")]
-            [Column("ID_CULTIVO")]
-            public int IdCultivo { get; set; }
+        [Required]
+        [ForeignKey("Cultivo")]
+        [Column("IDCULTIVO")]
+        public int IdCultivo { get; set; }
 
-            [Column("ESTADO")]
-            [StringLength(20)]
-            public string Estado { get; set; }
+        [Column("ESTADO")]
+        [StringLength(1)]
+        public string EstadoChar { get; set; } = "1";
 
-            [Column("PORCENTADEDESARROLLO")]
-            public decimal? PorcentajeDesarrollo { get; set; }
+        [NotMapped]
+        public bool Estado
+        {
+            get => EstadoChar == "1";
+            set => EstadoChar = value ? "1" : "0";
+        }
 
-            [Column("FECHASIEMBRA")]
-            public DateTime FechaSiembra { get; set; }
+        [Required]
+        [Column("FECHASIEMBRA")]
+        public DateTime FechaSiembra { get; set; }
 
-            [Column("FECHAGERMINACION")]
-            public DateTime? FechaGerminacion { get; set; }
+        [Column("PORCENTAJEDESARROLLO")]
+        public decimal? PorcentajeDesarrollo { get; set; } = 0;
 
-            [Column("FECHAFLORACION")]
-            public DateTime? FechaFloracion { get; set; }
+        [Column("FECHAGERMINACION")]
+        public DateTime? FechaGerminacion { get; set; }
 
-            [Column("FECHACOSECHA")]
-            public DateTime? FechaCosecha { get; set; }
+        [Column("FECHAFLORACION")]
+        public DateTime? FechaFloracion { get; set; }
 
-            [Column("GERMINACION_CONFIRMADA")]
-            public bool GerminacionConfirmada { get; set; }
+        [Column("FECHACOSECHA")]
+        public DateTime? FechaCosecha { get; set; }
 
-            [Column("FLORACION_CONFIRMADA")]
-            public bool FloracionConfirmada { get; set; }
+        [Column("GERMINACIONCONFIRMADA")]
+        [StringLength(1)]
+        public string GerminacionConfirmadaChar { get; set; } = "0";
 
-            [Column("COSECHA_CONFIRMADA")]
-            public bool CosechaConfirmada { get; set; }
-        
+        [NotMapped]
+        public bool GerminacionConfirmada
+        {
+            get => GerminacionConfirmadaChar == "1";
+            set => GerminacionConfirmadaChar = value ? "1" : "0";
+        }
+
+        [Column("FLORACIONCONFIRMADA")]
+        [StringLength(1)]
+        public string FloracionConfirmadaChar { get; set; } = "0";
+
+        [NotMapped]
+        public bool FloracionConfirmada
+        {
+            get => FloracionConfirmadaChar == "1";
+            set => FloracionConfirmadaChar = value ? "1" : "0";
+        }
+
+        [Column("COSECHACONFIRMADA")]
+        [StringLength(1)]
+        public string CosechaConfirmadaChar { get; set; } = "0";
+
+        [NotMapped]
+        public bool CosechaConfirmada
+        {
+            get => CosechaConfirmadaChar == "1";
+            set => CosechaConfirmadaChar = value ? "1" : "0";
+        }
+
+        // Navegación
+        public virtual Parcela Parcela { get; set; }
+        public virtual Cultivo Cultivo { get; set; }
     }
 }
 
