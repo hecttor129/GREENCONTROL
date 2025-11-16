@@ -63,9 +63,7 @@ namespace BLL
                 Tipo = tarea.Tipo,
                 Estado = tarea.Estado,
                 FechaTarea = tarea.FechaTarea,   
-                Costo = tarea.Costo,
-
-                //FechaSnapshot = DateTime.Now
+                Descripcion = tarea.Descripcion,
 
             };
         }

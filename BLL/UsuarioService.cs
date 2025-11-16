@@ -48,5 +48,7 @@ namespace BLL
             var response = usuarioRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
+
+
     }
 }

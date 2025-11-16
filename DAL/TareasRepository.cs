@@ -20,7 +20,7 @@ namespace DAL
                 FechaTarea = reader["FECHATAREA"] != DBNull.Value ? Convert.ToDateTime(reader["FECHATAREA"]) : (DateTime?)null,
                 EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "0",
                 Urgencia = reader["URGENCIA"] != DBNull.Value ? Convert.ToInt32(reader["URGENCIA"]) : (int?)null,
-                Costo = reader["COSTO"] != DBNull.Value ? Convert.ToDecimal(reader["COSTO"]) : (decimal?)null
+                Descripcion = reader["DESCRIPCION"] != DBNull.Value ? reader["DESCRIPCION"].ToString() : string.Empty
             };
         }
 
@@ -28,8 +28,8 @@ namespace DAL
         {
             var response = new Response<Tareas>();
             string queryId = "SELECT SEQ_TAREAS.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO TAREAS (IDTAREA, IDPARCELA, TIPO, FECHATAREA, URGENCIA, ESTADO, COSTO)
-                                   VALUES (:Id, :IdParcela, :Tipo, :FechaTarea, :Urgencia, :Estado, :Costo)";
+            string queryInsert = @"INSERT INTO TAREAS (IDTAREA, IDPARCELA, TIPO, FECHATAREA, URGENCIA, ESTADO, DESCRIPCION)
+                                   VALUES (:Id, :IdParcela, :Tipo, :FechaTarea, :Urgencia, :Estado, :Descripcion)";
 
             OracleTransaction transaction = null;
 
@@ -57,7 +57,7 @@ namespace DAL
                     cmd.Parameters.Add(new OracleParameter("FechaTarea", OracleDbType.Date) { Value = entidad.FechaTarea ?? (object)DBNull.Value });
                     cmd.Parameters.Add(new OracleParameter("Urgencia", OracleDbType.Int32) { Value = (object)entidad.Urgencia ?? DBNull.Value });
                     cmd.Parameters.Add(new OracleParameter("Estado", OracleDbType.Varchar2) { Value = entidad.EstadoChar ?? "0" });
-                    cmd.Parameters.Add(new OracleParameter("Costo", OracleDbType.Decimal) { Value = entidad.Costo ?? (object)DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Descripcion", OracleDbType.Clob) { Value = entidad.Descripcion ?? (object)DBNull.Value });
 
                     cmd.ExecuteNonQuery();
                 }
@@ -92,7 +92,7 @@ namespace DAL
                                  FECHATAREA = :FechaTarea,
                                  URGENCIA = :Urgencia,
                                  ESTADO = :Estado,
-                                 COSTO = :Costo
+                                 DESCRIPCION = :Descripcion
                              WHERE IDTAREA = :Id";
 
             OracleTransaction transaction = null;
@@ -112,7 +112,7 @@ namespace DAL
                     cmd.Parameters.Add(new OracleParameter("FechaTarea", OracleDbType.Date) { Value = entidad.FechaTarea ?? (object)DBNull.Value });
                     cmd.Parameters.Add(new OracleParameter("Urgencia", OracleDbType.Int32) { Value = (object)entidad.Urgencia ?? DBNull.Value });
                     cmd.Parameters.Add(new OracleParameter("Estado", OracleDbType.Varchar2) { Value = entidad.EstadoChar ?? "0" });
-                    cmd.Parameters.Add(new OracleParameter("Costo", OracleDbType.Decimal) { Value = entidad.Costo ?? (object)DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Descripcion", OracleDbType.Clob) { Value = entidad.Descripcion ?? (object)DBNull.Value });
                     cmd.Parameters.Add(new OracleParameter("Id", OracleDbType.Int32) { Value = entidad.IdTarea });
 
                     int filas = cmd.ExecuteNonQuery();

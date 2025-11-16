@@ -51,13 +51,16 @@ namespace BLL
             var response = siembraRepository.ObtenerPorId(Convert.ToInt32(id));
             return response.Entidad;
         }
-
-        public int CalcularDuracionCiclo()
+        public string ObtenerNombreCultivo(int idSiembra)
         {
-            return 0;
+            var siembra = ObtenerPorId(idSiembra.ToString());
+            if (siembra.IdCultivo != null)
+            {
+                var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo);
+                return cultivo.Entidad.Nombre;
+            }
+            return string.Empty;
         }
-
-
 
     }
 }

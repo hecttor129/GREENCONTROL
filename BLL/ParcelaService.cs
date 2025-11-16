@@ -52,11 +52,7 @@ namespace BLL
 
         public Historial ObtenerDatos(int idParcela)
         {
-
-
-
             throw new NotImplementedException();
-
         }
 
 

@@ -275,7 +275,60 @@ namespace DAL
 
             return response;
         }
+
+        public Response<Siembra> ObtenerPorParcela(int idParcela)
+        {
+            Response<Siembra> response = new Response<Siembra>();
+            string query = "SELECT * FROM SIEMBRA WHERE IDPARCELA = :IdParcela";
+
+            try
+            {
+                AbrirConexion();
+
+                using (OracleCommand cmd = new OracleCommand(query, conexion))
+                {
+                    cmd.Parameters.Add(new OracleParameter("IdParcela", idParcela));
+
+                    using (OracleDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            response.Estado = true;
+                            response.Entidad = Mapear(reader);
+                            response.Mensaje = "Siembra encontrada para la parcela.";
+                        }
+                        else
+                        {
+                            response.Estado = false;
+                            response.Mensaje = "No hay Siembra registrada para esta parcela.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Estado = false;
+                response.Mensaje = "Error al consultar Siembra por parcela: " + ex.Message;
+            }
+            finally
+            {
+                CerrarConexion();
+            }
+
+            return response;
+        }
+
+
+
     }
 }
+
+
+
+
+
+
+
+ 
 
 

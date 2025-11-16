@@ -58,10 +58,43 @@ namespace BLL
         }
 
         //crear el json con los datos necesarios para la prediccion
-        public string CrearJsonPrediccion()
+        public string CrearJsonPrediccion(int idSiembra)
         {
+            var siembra = siembraRepository.ObtenerPorId(idSiembra).Entidad;
+            var parcela = parcelaRepository.ObtenerPorId(siembra.IdParcela).Entidad;
+            var cultivo = cultivoRepository.ObtenerPorId(siembra.IdCultivo).Entidad;
 
-            return "";
+            var jsonDatosPrediccion = new
+            {
+                parcela.AreaCalculada,
+                parcela.IdParcela,
+                siembra.FechaSiembra,
+                siembra.FechaGerminacion,
+                siembra.FechaFloracion,
+                parcela.TipoSuelo,
+                parcela.PhSuelo,
+                cultivo.Id,
+                cultivo.Nombre,
+                cultivo.DuracionCiclo_Fecha1,
+                cultivo.DuracionCiclo_Fecha2,
+                cultivo.DiasGerminacion_Fecha1,
+                cultivo.DiasGerminacion_Fecha2,
+                cultivo.DiasFloracion_Fecha1,
+                cultivo.DiasFloracion_Fecha2,
+                cultivo.DiasCosecha_Fecha1,
+                cultivo.DiasCosecha_Fecha2
+            };
+
+            return System.Text.Json.JsonSerializer.Serialize(jsonDatosPrediccion);
+        }
+
+        public string CrearJsonHistoriales(string NombreCultivo)
+        {
+            var jsonhistoriales = historialRepository.ObtenerTodos().Lista?
+            .Where(h => h.NombreCultivo == NombreCultivo)
+            .ToList() ?? new List<Historial>();
+
+            return System.Text.Json.JsonSerializer.Serialize(jsonhistoriales);
         }
 
 

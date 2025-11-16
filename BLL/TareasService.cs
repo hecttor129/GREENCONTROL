@@ -131,8 +131,6 @@ namespace BLL
                 return "El tipo de tarea es inválido. Solo puede contener letras, espacios y máximo 20 caracteres.";
 
             // Costo
-            if (!ValidarCostoTarea(entidad.Costo))
-                return "El costo no puede ser negativo.";
 
             return null;
         }
@@ -152,14 +150,6 @@ namespace BLL
         private bool ValidarFechaEstipuladaTarea(DateTime? fechaTarea)
         {
             if (!fechaTarea.HasValue || fechaTarea.Value < DateTime.Now)
-            {
-                return false;
-            }
-            return true;
-        }
-        private bool ValidarCostoTarea(decimal? costoTarea)
-        {
-            if (costoTarea.HasValue && costoTarea.Value < 0)
             {
                 return false;
             }

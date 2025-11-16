@@ -16,7 +16,9 @@ namespace BLL
         private readonly CultivoRepository cultivoRepository;
         private readonly CosechaRepository cosechaRepository;
         private readonly GastosRepository gastosRepository;
-        private readonly SiembraService siembraService;
+        private readonly SiembraRepository siembraRepository;
+        private readonly RentabilidadRepository rentabilidadRepository;
+
 
 
         public HistorialService()
@@ -26,7 +28,8 @@ namespace BLL
             cultivoRepository = new CultivoRepository();
             cosechaRepository = new CosechaRepository();
             gastosRepository = new GastosRepository();
-            siembraService = new SiembraService();
+            siembraRepository = new SiembraRepository();
+            rentabilidadRepository = new RentabilidadRepository();
         }
 
         public string Guardar(Historial entidad)
@@ -64,16 +67,26 @@ namespace BLL
             return response.Entidad;
         }
 
-        public Historial CrearHistorialDesdeRegistros(
-               Parcela parcela,
-               Cultivo cultivo,
-               Siembra siembra,
-               Cosecha cosecha,
-               decimal? costoTotalProduccion,
-               decimal? ingresoTotal,
-               decimal? rentabilidadFinal
-            )
+
+        public int CalcularDuracionCiclo(int idSiembra)
         {
+            var siembra = siembraRepository.ObtenerPorId(idSiembra);
+            int diasCiclo = siembra.Entidad.FechaCosecha.HasValue && siembra.Entidad.FechaSiembra != null
+                ? (siembra.Entidad.FechaCosecha.Value - siembra.Entidad.FechaSiembra).Days
+                : 0;
+
+            return diasCiclo;
+        }
+
+
+        public Historial CrearHistorialDesdeRegistros(int idParcela)
+        {
+            var parcela = parcelaRepository.ObtenerPorId(idParcela).Entidad;
+            var siembra = siembraRepository.ObtenerPorId(parcela.IdCultivo).Entidad;
+            var cultivo = cultivoRepository.ObtenerPorId(parcela.IdCultivo).Entidad;
+            var cosecha = cosechaRepository.ObtenerPorId(idParcela).Entidad;
+            var rentabilidad = rentabilidadRepository.ObtenerPorId(idParcela).Entidad;
+
             return new Historial
             {
                 IdParcela = parcela.IdParcela,
@@ -89,7 +102,7 @@ namespace BLL
                 // Producción
                 CalidadCosechada = cosecha?.CalidadCosechada,
                 CantidadCosechada = cosecha?.CantidadCosechada,
-                DuracionCiclo = siembraService.CalcularDuracionCiclo(),
+                DuracionCiclo = CalcularDuracionCiclo(siembra.IdSiembra),
 
                 // Datos de la parcela
                 NombreParcela = parcela.Nombre,
@@ -101,9 +114,9 @@ namespace BLL
 
 
                 // Datos económicos (YA RECIBIDOS, SIN CALCULAR)
-                CostoTotalProduccion = costoTotalProduccion,
-                IngresoTotal = ingresoTotal,
-                RentabilidadFinal = rentabilidadFinal,
+                CostoTotalProduccion = rentabilidad.CostoTotalProduccion,
+                IngresoTotal = rentabilidad.IngresoTotal,
+                RentabilidadFinal = rentabilidad.RentabilidadPorcentual,
 
                 // Momento en que se toma el snapshot
                 FechaSnapshot = DateTime.Now

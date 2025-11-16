@@ -61,8 +61,6 @@ namespace BLL
                 Descripcion = gasto.Descripcion,
                 FechaGasto = gasto.Fecha,
 
-                // Momento del snapshot
-                //FechaSnapshot = DateTime.Now
             };
         }
 

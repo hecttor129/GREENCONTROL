@@ -42,8 +42,8 @@ namespace ENTITY
         [Column("URGENCIA")]
         public int? Urgencia { get; set; }
 
-        [Column("COSTO")]
-        public decimal? Costo { get; set; }
+        [Column("DESCRIPCION")]
+        public string Descripcion { get; set; }
 
         public virtual Parcela Parcela { get; set; }
     }

@@ -237,6 +237,49 @@ namespace DAL
             return response;
         }
 
+        public Response<Rentabilidad> ObtenerPorParcela(int idParcela)
+        {
+            Response<Rentabilidad> response = new Response<Rentabilidad>();
+            string query = "SELECT * FROM RENTABILIDAD WHERE IDPARCELA = :IdParcela";
+
+            try
+            {
+                AbrirConexion();
+
+                using (OracleCommand cmd = new OracleCommand(query, conexion))
+                {
+                    cmd.Parameters.Add(new OracleParameter("IdParcela", idParcela));
+
+                    using (OracleDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            response.Estado = true;
+                            response.Entidad = Mapear(reader);
+                            response.Mensaje = "Rentabilidad encontrada para la parcela.";
+                        }
+                        else
+                        {
+                            response.Estado = false;
+                            response.Mensaje = "No hay rentabilidad registrada para esta parcela.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Estado = false;
+                response.Mensaje = "Error al consultar rentabilidad por parcela: " + ex.Message;
+            }
+            finally
+            {
+                CerrarConexion();
+            }
+
+            return response;
+        }
+
+
         // 📈 CALCULAR RENTABILIDAD POR PARCELA
         //public Response<Rentabilidad> CalcularRentabilidadPorParcela(int idParcela)
         //{

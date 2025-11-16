@@ -20,7 +20,7 @@ namespace DAL
                 FechaTarea = reader["FECHATAREA"] != DBNull.Value ? Convert.ToDateTime(reader["FECHATAREA"]) : (DateTime?)null,
                 EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "0",
                 Urgencia = reader["URGENCIA"] != DBNull.Value ? Convert.ToInt32(reader["URGENCIA"]) : (int?)null,
-                Costo = reader["COSTO"] != DBNull.Value ? Convert.ToDecimal(reader["COSTO"]) : (decimal?)null
+                Descripcion = reader["DESCRIPCION"] != DBNull.Value ? reader["DESCRIPCION"].ToString() : null
             };
         }
 
@@ -30,8 +30,8 @@ namespace DAL
 
             string queryId = "SELECT SEQ_HISTORIALTAREAS.NEXTVAL FROM DUAL";
             string queryInsert = @"INSERT INTO HISTORIALTAREAS 
-                (IDHISTORIALTAREAS, IDPARCELA, TIPO, FECHATAREA, ESTADO, URGENCIA, COSTO)
-                VALUES (:Id, :IdParcela, :Tipo, :FechaTarea, :Estado, :Urgencia, :Costo)";
+                (IDHISTORIALTAREAS, IDPARCELA, TIPO, FECHATAREA, ESTADO, URGENCIA, DESCRIPCION)
+                VALUES (:Id, :IdParcela, :Tipo, :FechaTarea, :Estado, :Urgencia, :Descripcion)";
 
             OracleTransaction transaction = null;
 
@@ -56,7 +56,7 @@ namespace DAL
                     command.Parameters.Add(new OracleParameter("FechaTarea", entidad.FechaTarea ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Urgencia", entidad.Urgencia ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Costo", entidad.Costo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Descripcion", entidad.Descripcion ?? (object)DBNull.Value));
 
                     command.ExecuteNonQuery();
                 }
@@ -91,7 +91,7 @@ namespace DAL
                              FECHATAREA = :FechaTarea,
                              ESTADO = :Estado,
                              URGENCIA = :Urgencia,
-                             COSTO = :Costo
+                             DESCRIPCION = :Descripcion
                              WHERE IDHISTORIALTAREAS = :Id";
 
             OracleTransaction transaction = null;
@@ -109,7 +109,7 @@ namespace DAL
                     command.Parameters.Add(new OracleParameter("FechaTarea", entidad.FechaTarea ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Urgencia", entidad.Urgencia ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Costo", entidad.Costo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Descripcion", entidad.Descripcion ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("Id", entidad.IdHistorialTareas));
 
                     command.ExecuteNonQuery();
