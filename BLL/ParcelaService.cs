@@ -49,15 +49,5 @@ namespace BLL
             return response.Entidad;
         }
 
-
-        public Historial ObtenerDatos(int idParcela)
-        {
-            throw new NotImplementedException();
-        }
-
-
-
-
-
     }
 }

@@ -34,5 +34,10 @@ namespace ENTITY
         [Column("TELEFONO")]
         [StringLength(10)]
         public string Telefono { get; set; }
+
+        [Required] 
+        [Column("ESTADO")]
+        [StringLength(1)]
+        public string Estado { get; set; } = "1"; 
     }
 }

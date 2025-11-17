@@ -17,30 +17,18 @@ namespace DAL
                 IdSiembra = Convert.ToInt32(reader["IDSIEMBRA"]),
                 IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
                 IdCultivo = Convert.ToInt32(reader["IDCULTIVO"]),
-                EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1",
                 FechaSiembra = Convert.ToDateTime(reader["FECHASIEMBRA"]),
-                PorcentajeDesarrollo = reader["PORCENTAJEDESARROLLO"] != DBNull.Value ? Convert.ToDecimal(reader["PORCENTAJEDESARROLLO"]) : (decimal?)null,
-                FechaGerminacion = reader["FECHAGERMINACION"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAGERMINACION"]) : (DateTime?)null,
-                FechaFloracion = reader["FECHAFLORACION"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAFLORACION"]) : (DateTime?)null,
                 FechaCosecha = reader["FECHACOSECHA"] != DBNull.Value ? Convert.ToDateTime(reader["FECHACOSECHA"]) : (DateTime?)null,
-                GerminacionConfirmadaChar = reader["GERMINACIONCONFIRMADA"] != DBNull.Value ? reader["GERMINACIONCONFIRMADA"].ToString() : "0",
-                FloracionConfirmadaChar = reader["FLORACIONCONFIRMADA"] != DBNull.Value ? reader["FLORACIONCONFIRMADA"].ToString() : "0",
-                CosechaConfirmadaChar = reader["COSECHACONFIRMADA"] != DBNull.Value ? reader["COSECHACONFIRMADA"].ToString() : "0"
+                Estado = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1"
             };
         }
 
         public Response<Siembra> Insertar(Siembra entidad)
         {
             Response<Siembra> response = new Response<Siembra>();
-
             string queryId = "SELECT SEQ_SIEMBRA.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO SIEMBRA 
-                (IDSIEMBRA, IDPARCELA, IDCULTIVO, ESTADO, PORCENTAJEDESARROLLO, 
-                 FECHASIEMBRA, FECHAGERMINACION, FECHAFLORACION, FECHACOSECHA,
-                 GERMINACIONCONFIRMADA, FLORACIONCONFIRMADA, COSECHACONFIRMADA)
-                VALUES (:Id, :IdParcela, :IdCultivo, :Estado, :PorcentajeDesarrollo,
-                        :FechaSiembra, :FechaGerminacion, :FechaFloracion, :FechaCosecha,
-                        :GerminacionConfirmada, :FloracionConfirmada, :CosechaConfirmada)";
+            string queryInsert = @"INSERT INTO SIEMBRA (IDSIEMBRA, IDPARCELA, IDCULTIVO, FECHASIEMBRA, FECHACOSECHA, ESTADO)
+                                   VALUES (:Id, :IdParcela, :IdCultivo, :FechaSiembra, :FechaCosecha, :Estado)";
 
             OracleTransaction transaction = null;
 
@@ -62,15 +50,9 @@ namespace DAL
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
                     command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("IdCultivo", entidad.IdCultivo));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("PorcentajeDesarrollo", entidad.PorcentajeDesarrollo ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra));
-                    command.Parameters.Add(new OracleParameter("FechaGerminacion", entidad.FechaGerminacion ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaFloracion", entidad.FechaFloracion ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("GerminacionConfirmada", entidad.GerminacionConfirmadaChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FloracionConfirmada", entidad.FloracionConfirmadaChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CosechaConfirmada", entidad.CosechaConfirmadaChar ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
 
                     command.ExecuteNonQuery();
                 }
@@ -99,17 +81,11 @@ namespace DAL
         {
             Response<Siembra> response = new Response<Siembra>();
             string query = @"UPDATE SIEMBRA SET 
-                                IDPARCELA = :IdParcela, 
-                                IDCULTIVO = :IdCultivo,
-                                ESTADO = :Estado,
-                                PORCENTAJEDESARROLLO = :PorcentajeDesarrollo,
-                                FECHASIEMBRA = :FechaSiembra,
-                                FECHAGERMINACION = :FechaGerminacion,
-                                FECHAFLORACION = :FechaFloracion,
-                                FECHACOSECHA = :FechaCosecha,
-                                GERMINACIONCONFIRMADA = :GerminacionConfirmada,
-                                FLORACIONCONFIRMADA = :FloracionConfirmada,
-                                COSECHACONFIRMADA = :CosechaConfirmada
+                             IDPARCELA = :IdParcela, 
+                             IDCULTIVO = :IdCultivo,
+                             FECHASIEMBRA = :FechaSiembra,
+                             FECHACOSECHA = :FechaCosecha,
+                             ESTADO = :Estado
                              WHERE IDSIEMBRA = :Id";
 
             OracleTransaction transaction = null;
@@ -124,15 +100,9 @@ namespace DAL
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("IdParcela", entidad.IdParcela));
                     command.Parameters.Add(new OracleParameter("IdCultivo", entidad.IdCultivo));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("PorcentajeDesarrollo", entidad.PorcentajeDesarrollo ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra));
-                    command.Parameters.Add(new OracleParameter("FechaGerminacion", entidad.FechaGerminacion ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FechaFloracion", entidad.FechaFloracion ?? (object)DBNull.Value));
                     command.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("GerminacionConfirmada", entidad.GerminacionConfirmadaChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("FloracionConfirmada", entidad.FloracionConfirmadaChar ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("CosechaConfirmada", entidad.CosechaConfirmadaChar ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
                     command.Parameters.Add(new OracleParameter("Id", entidad.IdSiembra));
 
                     command.ExecuteNonQuery();
@@ -160,7 +130,7 @@ namespace DAL
         public Response<Siembra> Eliminar(int id)
         {
             Response<Siembra> response = new Response<Siembra>();
-            string query = "DELETE FROM SIEMBRA WHERE IDSIEMBRA = :Id";
+            string query = "UPDATE SIEMBRA SET ESTADO = '0' WHERE IDSIEMBRA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -197,7 +167,7 @@ namespace DAL
         public Response<Siembra> ObtenerPorId(int id)
         {
             Response<Siembra> response = new Response<Siembra>();
-            string query = "SELECT * FROM SIEMBRA WHERE IDSIEMBRA = :Id";
+            string query = "SELECT * FROM SIEMBRA WHERE IDSIEMBRA = :Id AND ESTADO = '1'";
 
             try
             {
@@ -240,7 +210,7 @@ namespace DAL
         {
             Response<Siembra> response = new Response<Siembra>();
             List<Siembra> listaSiembras = new List<Siembra>();
-            string query = "SELECT * FROM SIEMBRA ORDER BY FECHASIEMBRA DESC";
+            string query = "SELECT * FROM SIEMBRA WHERE ESTADO = '1' ORDER BY FECHASIEMBRA DESC";
 
             try
             {
@@ -279,7 +249,8 @@ namespace DAL
         public Response<Siembra> ObtenerPorParcela(int idParcela)
         {
             Response<Siembra> response = new Response<Siembra>();
-            string query = "SELECT * FROM SIEMBRA WHERE IDPARCELA = :IdParcela";
+            List<Siembra> listaSiembras = new List<Siembra>();
+            string query = "SELECT * FROM SIEMBRA WHERE IDPARCELA = :IdParcela AND ESTADO = '1' ORDER BY FECHASIEMBRA DESC";
 
             try
             {
@@ -291,24 +262,23 @@ namespace DAL
 
                     using (OracleDataReader reader = cmd.ExecuteReader())
                     {
-                        if (reader.Read())
+                        while (reader.Read())
                         {
-                            response.Estado = true;
-                            response.Entidad = Mapear(reader);
-                            response.Mensaje = "Siembra encontrada para la parcela.";
-                        }
-                        else
-                        {
-                            response.Estado = false;
-                            response.Mensaje = "No hay Siembra registrada para esta parcela.";
+                            listaSiembras.Add(Mapear(reader));
                         }
                     }
                 }
+
+                response.Estado = true;
+                response.Lista = listaSiembras;
+                response.Mensaje = listaSiembras.Count > 0
+                    ? $"Se encontraron {listaSiembras.Count} siembras para la parcela"
+                    : "No hay siembras registradas para esta parcela";
             }
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error al consultar Siembra por parcela: " + ex.Message;
+                response.Mensaje = "Error al consultar siembras por parcela: " + ex.Message;
             }
             finally
             {
@@ -317,9 +287,6 @@ namespace DAL
 
             return response;
         }
-
-
-
     }
 }
 

@@ -14,41 +14,26 @@ namespace DAL
         {
             return new Cultivo
             {
-                Id = Convert.ToInt32(reader["IDCULTIVO"]),
-                Nombre = reader["NOMBRE"]?.ToString(),
-                Variedad = reader["VARIEDAD"]?.ToString(),
-                DuracionCiclo_Fecha1 = reader["DURACIONCICLO_FECHA1"] != DBNull.Value ? Convert.ToInt32(reader["DURACIONCICLO_FECHA1"]) : (int?)null,
-                DuracionCiclo_Fecha2 = reader["DURACIONCICLO_FECHA2"] != DBNull.Value ? Convert.ToInt32(reader["DURACIONCICLO_FECHA2"]) : (int?)null,
-                DiasGerminacion_Fecha1 = reader["DIASGERMINACION_FECHA1"] != DBNull.Value ? Convert.ToInt32(reader["DIASGERMINACION_FECHA1"]) : (int?)null,
-                DiasGerminacion_Fecha2 = reader["DIASGERMINACION_FECHA2"] != DBNull.Value ? Convert.ToInt32(reader["DIASGERMINACION_FECHA2"]) : (int?)null,
-                DiasFloracion_Fecha1 = reader["DIASFLORACION_FECHA1"] != DBNull.Value ? Convert.ToInt32(reader["DIASFLORACION_FECHA1"]) : (int?)null,
-                DiasFloracion_Fecha2 = reader["DIASFLORACION_FECHA2"] != DBNull.Value ? Convert.ToInt32(reader["DIASFLORACION_FECHA2"]) : (int?)null,
-                DiasCosecha_Fecha1 = reader["DIASCOSECHA_FECHA1"] != DBNull.Value ? Convert.ToInt32(reader["DIASCOSECHA_FECHA1"]) : (int?)null,
-                DiasCosecha_Fecha2 = reader["DIASCOSECHA_FECHA2"] != DBNull.Value ? Convert.ToInt32(reader["DIASCOSECHA_FECHA2"]) : (int?)null,
-                TemperaturaOptima = reader["TEMPERATURAOPTIMA"] != DBNull.Value ? Convert.ToDecimal(reader["TEMPERATURAOPTIMA"]) : (decimal?)null,
-                TipoSuelo = reader["TIPOSUELO"]?.ToString(),
-                PhSuelo = reader["PHSUELO"] != DBNull.Value ? Convert.ToDecimal(reader["PHSUELO"]) : (decimal?)null,
-                HumedadOptima = reader["HUMEDADOPTIMA"] != DBNull.Value ? Convert.ToDecimal(reader["HUMEDADOPTIMA"]) : (decimal?)null,
-                Descripcion = reader["DESCRIPCION"]?.ToString()
+                IdCultivo = Convert.ToInt32(reader["IDCULTIVO"]),
+                Nombre = reader["NOMBRE"].ToString(),
+                Variedad = reader["VARIEDAD"] != DBNull.Value ? reader["VARIEDAD"].ToString() : null,
+                DuracionCiclo = reader["DURACIONCICLO"] != DBNull.Value ? Convert.ToInt32(reader["DURACIONCICLO"]) : (int?)null,
+                FechaSiembra = Convert.ToDateTime(reader["FECHASIEMBRA"]),
+                FechaGerminacion = reader["FECHAGERMINACION"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAGERMINACION"]) : (DateTime?)null,
+                FechaFloracion = reader["FECHAFLORACION"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAFLORACION"]) : (DateTime?)null,
+                FechaCosecha = reader["FECHACOSECHA"] != DBNull.Value ? Convert.ToDateTime(reader["FECHACOSECHA"]) : (DateTime?)null,
+                EstadoChar = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1"
             };
         }
 
         public Response<Cultivo> Insertar(Cultivo entidad)
         {
             Response<Cultivo> response = new Response<Cultivo>();
-
             string queryId = "SELECT SEQ_CULTIVO.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO CULTIVO (
-                    IDCULTIVO, NOMBRE, VARIEDAD, DURACIONCICLO_FECHA1, DURACIONCICLO_FECHA2,
-                    DIASGERMINACION_FECHA1, DIASGERMINACION_FECHA2, DIASFLORACION_FECHA1,
-                    DIASFLORACION_FECHA2, DIASCOSECHA_FECHA1, DIASCOSECHA_FECHA2,
-                    TEMPERATURAOPTIMA, TIPOSUELO, PHSUELO, HUMEDADOPTIMA, DESCRIPCION
-                ) VALUES (
-                    :Id, :Nombre, :Variedad, :DuracionCiclo_Fecha1, :DuracionCiclo_Fecha2,
-                    :DiasGerminacion_Fecha1, :DiasGerminacion_Fecha2, :DiasFloracion_Fecha1,
-                    :DiasFloracion_Fecha2, :DiasCosecha_Fecha1, :DiasCosecha_Fecha2,
-                    :TemperaturaOptima, :TipoSuelo, :PhSuelo, :HumedadOptima, :Descripcion
-                )";
+            string queryInsert = @"INSERT INTO CULTIVO (IDCULTIVO, NOMBRE, VARIEDAD, DURACIONCICLO, FECHASIEMBRA, 
+                                   FECHAGERMINACION, FECHAFLORACION, FECHACOSECHA, ESTADO)
+                                   VALUES (:Id, :Nombre, :Variedad, :DuracionCiclo, :FechaSiembra, 
+                                   :FechaGerminacion, :FechaFloracion, :FechaCosecha, :Estado)";
 
             OracleTransaction transaction = null;
 
@@ -70,30 +55,20 @@ namespace DAL
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
                     command.Parameters.Add(new OracleParameter("Nombre", entidad.Nombre));
                     command.Parameters.Add(new OracleParameter("Variedad", entidad.Variedad ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DuracionCiclo_Fecha1", entidad.DuracionCiclo_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DuracionCiclo_Fecha2", entidad.DuracionCiclo_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasGerminacion_Fecha1", entidad.DiasGerminacion_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasGerminacion_Fecha2", entidad.DiasGerminacion_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasFloracion_Fecha1", entidad.DiasFloracion_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasFloracion_Fecha2", entidad.DiasFloracion_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasCosecha_Fecha1", entidad.DiasCosecha_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasCosecha_Fecha2", entidad.DiasCosecha_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("TemperaturaOptima", entidad.TemperaturaOptima ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("HumedadOptima", entidad.HumedadOptima ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Descripcion", OracleDbType.Clob)
-                    {
-                        Value = entidad.Descripcion ?? (object)DBNull.Value
-                    });
+                    command.Parameters.Add(new OracleParameter("DuracionCiclo", entidad.DuracionCiclo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra));
+                    command.Parameters.Add(new OracleParameter("FechaGerminacion", entidad.FechaGerminacion ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaFloracion", entidad.FechaFloracion ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? "1"));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
-                entidad.Id = nuevoId;
+                entidad.IdCultivo = nuevoId;
                 response.Estado = true;
-                response.Mensaje = "Cultivo guardado correctamente.";
+                response.Mensaje = "Cultivo guardado correctamente";
                 response.Entidad = entidad;
             }
             catch (Exception ex)
@@ -113,24 +88,16 @@ namespace DAL
         public Response<Cultivo> Actualizar(Cultivo entidad)
         {
             Response<Cultivo> response = new Response<Cultivo>();
-
             string query = @"UPDATE CULTIVO SET
-                    NOMBRE = :Nombre,
-                    VARIEDAD = :Variedad,
-                    DURACIONCICLO_FECHA1 = :DuracionCiclo_Fecha1,
-                    DURACIONCICLO_FECHA2 = :DuracionCiclo_Fecha2,
-                    DIASGERMINACION_FECHA1 = :DiasGerminacion_Fecha1,
-                    DIASGERMINACION_FECHA2 = :DiasGerminacion_Fecha2,
-                    DIASFLORACION_FECHA1 = :DiasFloracion_Fecha1,
-                    DIASFLORACION_FECHA2 = :DiasFloracion_Fecha2,
-                    DIASCOSECHA_FECHA1 = :DiasCosecha_Fecha1,
-                    DIASCOSECHA_FECHA2 = :DiasCosecha_Fecha2,
-                    TEMPERATURAOPTIMA = :TemperaturaOptima,
-                    TIPOSUELO = :TipoSuelo,
-                    PHSUELO = :PhSuelo,
-                    HUMEDADOPTIMA = :HumedadOptima,
-                    DESCRIPCION = :Descripcion
-                WHERE IDCULTIVO = :Id";
+                             NOMBRE = :Nombre,
+                             VARIEDAD = :Variedad,
+                             DURACIONCICLO = :DuracionCiclo,
+                             FECHASIEMBRA = :FechaSiembra,
+                             FECHAGERMINACION = :FechaGerminacion,
+                             FECHAFLORACION = :FechaFloracion,
+                             FECHACOSECHA = :FechaCosecha,
+                             ESTADO = :Estado
+                             WHERE IDCULTIVO = :Id";
 
             OracleTransaction transaction = null;
 
@@ -144,30 +111,20 @@ namespace DAL
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Nombre", entidad.Nombre));
                     command.Parameters.Add(new OracleParameter("Variedad", entidad.Variedad ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DuracionCiclo_Fecha1", entidad.DuracionCiclo_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DuracionCiclo_Fecha2", entidad.DuracionCiclo_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasGerminacion_Fecha1", entidad.DiasGerminacion_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasGerminacion_Fecha2", entidad.DiasGerminacion_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasFloracion_Fecha1", entidad.DiasFloracion_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasFloracion_Fecha2", entidad.DiasFloracion_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasCosecha_Fecha1", entidad.DiasCosecha_Fecha1 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("DiasCosecha_Fecha2", entidad.DiasCosecha_Fecha2 ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("TemperaturaOptima", entidad.TemperaturaOptima ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("HumedadOptima", entidad.HumedadOptima ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Descripcion", OracleDbType.Clob)
-                    {
-                        Value = entidad.Descripcion ?? (object)DBNull.Value
-                    });
-                    command.Parameters.Add(new OracleParameter("Id", entidad.Id));
+                    command.Parameters.Add(new OracleParameter("DuracionCiclo", entidad.DuracionCiclo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaSiembra", entidad.FechaSiembra));
+                    command.Parameters.Add(new OracleParameter("FechaGerminacion", entidad.FechaGerminacion ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaFloracion", entidad.FechaFloracion ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("FechaCosecha", entidad.FechaCosecha ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.EstadoChar ?? "1"));
+                    command.Parameters.Add(new OracleParameter("Id", entidad.IdCultivo));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
                 response.Estado = true;
-                response.Mensaje = "Cultivo actualizado.";
+                response.Mensaje = "Cultivo actualizado correctamente";
                 response.Entidad = entidad;
             }
             catch (Exception ex)
@@ -187,8 +144,7 @@ namespace DAL
         public Response<Cultivo> Eliminar(int id)
         {
             Response<Cultivo> response = new Response<Cultivo>();
-
-            string query = "DELETE FROM CULTIVO WHERE IDCULTIVO = :Id";
+            string query = "UPDATE CULTIVO SET ESTADO = '0' WHERE IDCULTIVO = :Id";
 
             OracleTransaction transaction = null;
 
@@ -206,7 +162,7 @@ namespace DAL
 
                 transaction.Commit();
                 response.Estado = true;
-                response.Mensaje = "Cultivo eliminado.";
+                response.Mensaje = "Cultivo eliminado correctamente";
             }
             catch (Exception ex)
             {
@@ -241,12 +197,12 @@ namespace DAL
                         {
                             response.Estado = true;
                             response.Entidad = Mapear(reader);
-                            response.Mensaje = "Cultivo encontrado.";
+                            response.Mensaje = "Cultivo encontrado";
                         }
                         else
                         {
                             response.Estado = false;
-                            response.Mensaje = "Cultivo no encontrado.";
+                            response.Mensaje = "Cultivo no encontrado";
                         }
                     }
                 }
@@ -268,7 +224,7 @@ namespace DAL
         {
             Response<Cultivo> response = new Response<Cultivo>();
             List<Cultivo> lista = new List<Cultivo>();
-            string query = "SELECT * FROM CULTIVO ORDER BY IDCULTIVO";
+            string query = "SELECT * FROM CULTIVO WHERE ESTADO = '1' ORDER BY IDCULTIVO";
 
             try
             {
@@ -279,7 +235,9 @@ namespace DAL
                     using (OracleDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
+                        {
                             lista.Add(Mapear(reader));
+                        }
                     }
                 }
 

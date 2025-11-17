@@ -13,42 +13,35 @@ namespace ENTITY
         public int IdNotificacion { get; set; }
 
         [Required]
-        [ForeignKey("Usuario")]
         [Column("IDUSUARIO")]
         public int IdUsuario { get; set; }
 
-        [ForeignKey("Parcela")]
-        [Column("IDPARCELA")]
-        public int? IdParcela { get; set; }
+        [ForeignKey("IdUsuario")]
+        public virtual Usuario Usuario { get; set; }
 
         [Column("TIPO")]
         [StringLength(15)]
         public string Tipo { get; set; }
 
         [Column("MENSAJE")]
-        public string Mensaje { get; set; }  // CLOB → string
+        public string Mensaje { get; set; }
 
         [Column("TITULO")]
         [StringLength(20)]
         public string Titulo { get; set; }
 
         [Column("FECHAENVIO")]
-        public DateTime FechaEnvio { get; set; } = DateTime.Now;
+        public DateTime? FechaEnvio { get; set; } = DateTime.Now;
 
+        [Required]
         [Column("LEIDO")]
         [StringLength(1)]
-        public string LeidoChar { get; set; } = "0";
+        public string Leido { get; set; } = "0";
 
-        [NotMapped]
-        public bool Leido
-        {
-            get => LeidoChar == "1";
-            set => LeidoChar = value ? "1" : "0";
-        }
-
-        // Navegación
-        public virtual Usuario Usuario { get; set; }
-        public virtual Parcela Parcela { get; set; }
+        [Required]
+        [Column("ESTADO")]
+        [StringLength(1)]
+        public string Estado { get; set; } = "1";
     }
 }
 

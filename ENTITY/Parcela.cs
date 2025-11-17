@@ -13,38 +13,30 @@ namespace ENTITY
         public int IdParcela { get; set; }
 
         [Required]
-        [ForeignKey("Finca")]
-        [Column("IDFINCA")]
-        public int IdFinca { get; set; }
+        [Column("IDUSUARIO")]
+        public int IdUsuario { get; set; }
 
-        [Required]
-        [ForeignKey("Cultivo")]
-        [Column("IDCULTIVO")]
-        public int IdCultivo { get; set; }
+        [ForeignKey("IdUsuario")]
+        public virtual Usuario Usuario { get; set; }
 
-        [Column("AREACALCULADA")]
-        public decimal? AreaCalculada { get; set; }
+        [Column("AREA", TypeName = "NUMBER(10,2)")]
+        public decimal? Area { get; set; }
 
         [Column("NOMBRE")]
         [StringLength(20)]
         public string Nombre { get; set; }
 
-        [Column("POLIGONOS")]
-        public string Poligonos { get; set; }  
-
-        public virtual Finca Finca { get; set; }
-        public virtual Cultivo Cultivo { get; set; }
-
-        [Column("PHSUELO")]
+        [Column("PHSUELO", TypeName = "NUMBER(4,2)")]
         public decimal? PhSuelo { get; set; }
 
         [Column("TIPOSUELO")]
         [StringLength(30)]
         public string TipoSuelo { get; set; }
 
-        public Parcela()
-        {
-        }
+        [Required]
+        [Column("ESTADO")]
+        [StringLength(1)]
+        public string Estado { get; set; } = "1";
     }
 }
 

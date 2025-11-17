@@ -8,34 +8,37 @@ namespace ENTITY
     public class Gastos
     {
         [Key]
-        [Column("IDGASTO")]   
+        [Column("IDGASTO")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int IdGasto { get; set; }
 
-        [Column("IDPARCELA")]
         [Required]
-        public int IdParcela { get; set; }
+        [Column("IDSIEMBRA")]
+        public int IdSiembra { get; set; }
 
-        [Column("FECHAGASTOS")]   
-        public DateTime? Fecha { get; set; }
-
-        [Column("RECURRENCIA")]
-        public int? Recurrencia { get; set; }
+        [Column("FECHAGASTOS")]
+        public DateTime? FechaGastos { get; set; }
 
         [Column("TIPO")]
         [StringLength(20)]
-        public string Tipo { get; set; }
+        public string? Tipo { get; set; }
 
-        [Column("DESCRIPCION")]   
-        public string Descripcion { get; set; }
+        [Column("CONCEPTO")]
+        public string? Concepto { get; set; } 
 
-        [Column("MONTO")]
+        [Column("MONTO", TypeName = "NUMBER(10,2)")]
         public decimal Monto { get; set; }
 
-        [ForeignKey("IDPARCELA")]
-        public virtual Parcela Parcela { get; set; }
+        [Column("NOTA")]
+        public string? Nota { get; set; } 
 
-       
+        [Column("ESTADO", TypeName = "CHAR(1)")]
+        [Required]
+        public char Estado { get; set; } = '1';
+
+        // Relación con Siembra
+        [ForeignKey("IDSIEMBRA")]
+        public virtual Siembra? Siembra { get; set; }
     }
 }
 

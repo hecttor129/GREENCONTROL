@@ -14,25 +14,23 @@ namespace DAL
         {
             return new Gastos
             {
-                Id = Convert.ToInt32(reader["IDGASTO"]),
-                IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
-                Fecha = reader["FECHAGASTOS"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAGASTOS"]) : (DateTime?)null,
-                Recurrencia = reader["RECURRENCIA"] != DBNull.Value ? Convert.ToInt32(reader["RECURRENCIA"]) : (int?)null,
-                Tipo = reader["TIPO"]?.ToString(),
-                Descripcion = reader["DESCRIPCION"]?.ToString(),
-                Monto = Convert.ToDecimal(reader["MONTO"])
+                IdGasto = Convert.ToInt32(reader["IDGASTO"]),
+                IdSiembra = Convert.ToInt32(reader["IDSIEMBRA"]),
+                FechaGastos = reader["FECHAGASTOS"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAGASTOS"]) : (DateTime?)null,
+                Tipo = reader["TIPO"] != DBNull.Value ? reader["TIPO"].ToString() : null,
+                Concepto = reader["CONCEPTO"] != DBNull.Value ? reader["CONCEPTO"].ToString() : null,
+                Monto = Convert.ToDecimal(reader["MONTO"]),
+                Nota = reader["NOTA"] != DBNull.Value ? reader["NOTA"].ToString() : null,
+                Estado = reader["ESTADO"] != DBNull.Value ? Convert.ToChar(reader["ESTADO"]) : '1'
             };
         }
 
         public Response<Gastos> Insertar(Gastos entidad)
         {
             Response<Gastos> response = new Response<Gastos>();
-
             string getId = "SELECT SEQ_GASTO.NEXTVAL FROM DUAL";
-
-            string insert = @"INSERT INTO GASTOS
-        (IDGASTO, IDPARCELA, FECHAGASTOS, RECURRENCIA, TIPO, DESCRIPCION, MONTO)
-        VALUES (:Id, :IdParcela, :Fecha, :Recurrencia, :Tipo, :Descripcion, :Monto)";
+            string insert = @"INSERT INTO GASTOS (IDGASTO, IDSIEMBRA, FECHAGASTOS, TIPO, CONCEPTO, MONTO, NOTA, ESTADO)
+                              VALUES (:Id, :IdSiembra, :Fecha, :Tipo, :Concepto, :Monto, :Nota, :Estado)";
 
             OracleTransaction tx = null;
 
@@ -51,24 +49,20 @@ namespace DAL
                 using (OracleCommand cmd = new OracleCommand(insert, conexion))
                 {
                     cmd.Transaction = tx;
-
-                    cmd.Parameters.Add("Id", nuevoId);
-                    cmd.Parameters.Add("IdParcela", entidad.IdParcela);
-                    cmd.Parameters.Add("Fecha", entidad.Fecha ?? (object)DBNull.Value);
-                    cmd.Parameters.Add("Recurrencia", entidad.Recurrencia ?? (object)DBNull.Value);
-                    cmd.Parameters.Add("Tipo", entidad.Tipo ?? (object)DBNull.Value);
-                    cmd.Parameters.Add(new OracleParameter("Descripcion", OracleDbType.Clob)
-                    {
-                        Value = entidad.Descripcion ?? (object)DBNull.Value
-                    });
-                    cmd.Parameters.Add("Monto", entidad.Monto);
+                    cmd.Parameters.Add(new OracleParameter("Id", nuevoId));
+                    cmd.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
+                    cmd.Parameters.Add(new OracleParameter("Fecha", entidad.FechaGastos ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("Concepto", OracleDbType.Clob) { Value = entidad.Concepto ?? (object)DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Monto", entidad.Monto));
+                    cmd.Parameters.Add(new OracleParameter("Nota", OracleDbType.Clob) { Value = entidad.Nota ?? (object)DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Estado", entidad.Estado));
 
                     cmd.ExecuteNonQuery();
                 }
 
                 tx.Commit();
-                entidad.Id = nuevoId;
-
+                entidad.IdGasto = nuevoId;
                 response.Estado = true;
                 response.Mensaje = "Gasto registrado correctamente";
                 response.Entidad = entidad;
@@ -77,7 +71,7 @@ namespace DAL
             {
                 tx?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error: " + ex.Message;
+                response.Mensaje = "Error al insertar gasto: " + ex.Message;
             }
             finally
             {
@@ -90,15 +84,15 @@ namespace DAL
         public Response<Gastos> Actualizar(Gastos entidad)
         {
             Response<Gastos> response = new Response<Gastos>();
-
             string query = @"UPDATE GASTOS SET
-            IDPARCELA = :IdParcela,
-            FECHAGASTOS = :Fecha,
-            RECURRENCIA = :Recurrencia,
-            TIPO = :Tipo,
-            DESCRIPCION = :Descripcion,
-            MONTO = :Monto
-        WHERE IDGASTO = :Id";
+                             IDSIEMBRA = :IdSiembra,
+                             FECHAGASTOS = :Fecha,
+                             TIPO = :Tipo,
+                             CONCEPTO = :Concepto,
+                             MONTO = :Monto,
+                             NOTA = :Nota,
+                             ESTADO = :Estado
+                             WHERE IDGASTO = :Id";
 
             OracleTransaction tx = null;
 
@@ -110,17 +104,14 @@ namespace DAL
                 using (OracleCommand cmd = new OracleCommand(query, conexion))
                 {
                     cmd.Transaction = tx;
-
-                    cmd.Parameters.Add("IdParcela", entidad.IdParcela);
-                    cmd.Parameters.Add("Fecha", entidad.Fecha ?? (object)DBNull.Value);
-                    cmd.Parameters.Add("Recurrencia", entidad.Recurrencia ?? (object)DBNull.Value);
-                    cmd.Parameters.Add("Tipo", entidad.Tipo ?? (object)DBNull.Value);
-                    cmd.Parameters.Add(new OracleParameter("Descripcion", OracleDbType.Clob)
-                    {
-                        Value = entidad.Descripcion ?? (object)DBNull.Value
-                    });
-                    cmd.Parameters.Add("Monto", entidad.Monto);
-                    cmd.Parameters.Add("Id", entidad.Id);
+                    cmd.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
+                    cmd.Parameters.Add(new OracleParameter("Fecha", entidad.FechaGastos ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(new OracleParameter("Concepto", OracleDbType.Clob) { Value = entidad.Concepto ?? (object)DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Monto", entidad.Monto));
+                    cmd.Parameters.Add(new OracleParameter("Nota", OracleDbType.Clob) { Value = entidad.Nota ?? (object)DBNull.Value });
+                    cmd.Parameters.Add(new OracleParameter("Estado", entidad.Estado));
+                    cmd.Parameters.Add(new OracleParameter("Id", entidad.IdGasto));
 
                     cmd.ExecuteNonQuery();
                 }
@@ -134,7 +125,7 @@ namespace DAL
             {
                 tx?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error: " + ex.Message;
+                response.Mensaje = "Error al actualizar gasto: " + ex.Message;
             }
             finally
             {
@@ -147,7 +138,7 @@ namespace DAL
         public Response<Gastos> Eliminar(int id)
         {
             Response<Gastos> response = new Response<Gastos>();
-            string query = "DELETE FROM GASTOS WHERE IDGASTO = :Id";
+            string query = "UPDATE GASTOS SET ESTADO = '0' WHERE IDGASTO = :Id";
 
             OracleTransaction tx = null;
 
@@ -159,19 +150,19 @@ namespace DAL
                 using (OracleCommand cmd = new OracleCommand(query, conexion))
                 {
                     cmd.Transaction = tx;
-                    cmd.Parameters.Add("Id", id);
+                    cmd.Parameters.Add(new OracleParameter("Id", id));
                     cmd.ExecuteNonQuery();
                 }
 
                 tx.Commit();
                 response.Estado = true;
-                response.Mensaje = "Gasto eliminado";
+                response.Mensaje = "Gasto eliminado correctamente";
             }
             catch (Exception ex)
             {
                 tx?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error: " + ex.Message;
+                response.Mensaje = "Error al eliminar gasto: " + ex.Message;
             }
             finally
             {
@@ -184,7 +175,7 @@ namespace DAL
         public Response<Gastos> ObtenerPorId(int id)
         {
             Response<Gastos> response = new Response<Gastos>();
-            string query = "SELECT * FROM GASTOS WHERE IDGASTO = :Id";
+            string query = "SELECT * FROM GASTOS WHERE IDGASTO = :Id AND ESTADO = '1'";
 
             try
             {
@@ -192,7 +183,7 @@ namespace DAL
 
                 using (OracleCommand cmd = new OracleCommand(query, conexion))
                 {
-                    cmd.Parameters.Add("Id", id);
+                    cmd.Parameters.Add(new OracleParameter("Id", id));
 
                     using (OracleDataReader reader = cmd.ExecuteReader())
                     {
@@ -205,7 +196,7 @@ namespace DAL
                         else
                         {
                             response.Estado = false;
-                            response.Mensaje = "No encontrado";
+                            response.Mensaje = "Gasto no encontrado";
                         }
                     }
                 }
@@ -213,7 +204,7 @@ namespace DAL
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error: " + ex.Message;
+                response.Mensaje = "Error al obtener gasto: " + ex.Message;
             }
             finally
             {
@@ -227,8 +218,7 @@ namespace DAL
         {
             Response<Gastos> response = new Response<Gastos>();
             List<Gastos> lista = new List<Gastos>();
-
-            string query = "SELECT * FROM GASTOS ORDER BY FECHAGASTOS DESC";
+            string query = "SELECT * FROM GASTOS WHERE ESTADO = '1' ORDER BY FECHAGASTOS DESC";
 
             try
             {
@@ -238,19 +228,21 @@ namespace DAL
                 using (OracleDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
+                    {
                         lista.Add(Mapear(reader));
+                    }
                 }
 
                 response.Estado = true;
                 response.Lista = lista;
                 response.Mensaje = lista.Count > 0
                     ? $"Se encontraron {lista.Count} gastos"
-                    : "No hay registros";
+                    : "No hay gastos registrados";
             }
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error: " + ex.Message;
+                response.Mensaje = "Error al obtener gastos: " + ex.Message;
             }
             finally
             {
@@ -260,114 +252,46 @@ namespace DAL
             return response;
         }
 
-        //public decimal CalcularCostoTotalInsumos(int idParcela)
-        //{
-        //    const string query = "SELECT NVL(SUM(UNIDAD * COSTOUNITARIO), 0) FROM INSUMO WHERE ID_PARCELA = :IdParcela";
-        //    decimal costoTotal = 0;
+        public Response<Gastos> ObtenerPorSiembra(int idSiembra)
+        {
+            Response<Gastos> response = new Response<Gastos>();
+            List<Gastos> lista = new List<Gastos>();
+            string query = "SELECT * FROM GASTOS WHERE IDSIEMBRA = :IdSiembra AND ESTADO = '1' ORDER BY FECHAGASTOS DESC";
 
-        //    try
-        //    {
-        //        AbrirConexion();
+            try
+            {
+                AbrirConexion();
 
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Parameters.Add(new OracleParameter("IdParcela", idParcela));
-        //            object resultado = command.ExecuteScalar();
+                using (OracleCommand cmd = new OracleCommand(query, conexion))
+                {
+                    cmd.Parameters.Add(new OracleParameter("IdSiembra", idSiembra));
 
-        //            if (resultado != null && resultado != DBNull.Value)
-        //                costoTotal = Convert.ToDecimal(resultado);
-        //        }
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
+                    using (OracleDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            lista.Add(Mapear(reader));
+                        }
+                    }
+                }
 
-        //    return costoTotal;
-        //}
+                response.Estado = true;
+                response.Lista = lista;
+                response.Mensaje = lista.Count > 0
+                    ? $"Se encontraron {lista.Count} gastos para esta siembra"
+                    : "Esta siembra no tiene gastos registrados";
+            }
+            catch (Exception ex)
+            {
+                response.Estado = false;
+                response.Mensaje = "Error al obtener gastos de la siembra: " + ex.Message;
+            }
+            finally
+            {
+                CerrarConexion();
+            }
 
-        //public Response<Insumo> ObtenerPorParcela(int idParcela)
-        //{
-        //    Response<Insumo> response = new Response<Insumo>();
-        //    List<Insumo> listaInsumos = new List<Insumo>();
-        //    string query = "SELECT * FROM INSUMO WHERE ID_PARCELA = :IdParcela ORDER BY TIPO";
-
-        //    try
-        //    {
-        //        AbrirConexion();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Parameters.Add(new OracleParameter("IdParcela", idParcela));
-
-        //            using (OracleDataReader reader = command.ExecuteReader())
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    listaInsumos.Add(Mapear(reader));
-        //                }
-        //            }
-        //        }
-
-        //        response.Estado = true;
-        //        response.Mensaje = listaInsumos.Count > 0
-        //            ? $"Se encontraron {listaInsumos.Count} insumos para esta parcela"
-        //            : "Esta parcela no tiene insumos registrados";
-        //        response.Lista = listaInsumos;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al obtener insumos de la parcela: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
-
-        //public Response<Insumo> ObtenerPorTipo(string tipo)
-        //{
-        //    Response<Insumo> response = new Response<Insumo>();
-        //    List<Insumo> listaInsumos = new List<Insumo>();
-        //    string query = "SELECT * FROM INSUMO WHERE TIPO = :Tipo ORDER BY COSTOUNITARIO";
-
-        //    try
-        //    {
-        //        AbrirConexion();
-
-        //        using (OracleCommand command = new OracleCommand(query, conexion))
-        //        {
-        //            command.Parameters.Add(new OracleParameter("Tipo", tipo));
-
-        //            using (OracleDataReader reader = command.ExecuteReader())
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    listaInsumos.Add(Mapear(reader));
-        //                }
-        //            }
-        //        }
-
-        //        response.Estado = true;
-        //        response.Mensaje = listaInsumos.Count > 0
-        //            ? $"Se encontraron {listaInsumos.Count} insumos de tipo '{tipo}'"
-        //            : $"No hay insumos de tipo '{tipo}'";
-        //        response.Lista = listaInsumos;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.Estado = false;
-        //        response.Mensaje = "Error al obtener insumos por tipo: " + ex.Message;
-        //    }
-        //    finally
-        //    {
-        //        CerrarConexion();
-        //    }
-
-        //    return response;
-        //}
+            return response;
+        }
     }
 }

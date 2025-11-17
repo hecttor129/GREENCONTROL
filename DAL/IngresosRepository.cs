@@ -1,35 +1,36 @@
-﻿using System;
+﻿using ENTITY;
+using Oracle.ManagedDataAccess.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ENTITY;
-using Oracle.ManagedDataAccess.Client;
 
 namespace DAL
 {
-    public class CosechaRepository : ConexionOracle, IRepository<Cosecha>
+    public class IngresosRepository : ConexionOracle, IRepository<Ingresos>
     {
-        private Cosecha Mapear(OracleDataReader reader)
+        private Ingresos Mapear(OracleDataReader reader)
         {
-            return new Cosecha
+            return new Ingresos
             {
-                Id = Convert.ToInt32(reader["IDCOSECHA"]),
+                IdIngresos = Convert.ToInt32(reader["IDINGRESOS"]),
                 IdSiembra = Convert.ToInt32(reader["IDSIEMBRA"]),
-                CalidadCosechada = reader["CALIDADCOSECHADA"] != DBNull.Value ? Convert.ToInt32(reader["CALIDADCOSECHADA"]) : (int?)null,
-                CantidadCosechada = reader["CANTIDADCOSECHADA"] != DBNull.Value ? Convert.ToDecimal(reader["CANTIDADCOSECHADA"]) : (decimal?)null,
-                PrecioVenta = reader["PRECIOVENTA"] != DBNull.Value ? Convert.ToDecimal(reader["PRECIOVENTA"]) : (decimal?)null,
-                Estado = reader["ESTADO"] != DBNull.Value ? Convert.ToChar(reader["ESTADO"]) : '1'
+                FechaIngresos = reader["FECHAINGRESOS"] != DBNull.Value ? Convert.ToDateTime(reader["FECHAINGRESOS"]) : (DateTime?)null,
+                Tipo = reader["TIPO"] != DBNull.Value ? reader["TIPO"].ToString() : null,
+                Concepto = reader["CONCEPTO"] != DBNull.Value ? reader["CONCEPTO"].ToString() : null,
+                Monto = reader["MONTO"] != DBNull.Value ? Convert.ToDecimal(reader["MONTO"]) : (decimal?)null,
+                Nota = reader["NOTA"] != DBNull.Value ? reader["NOTA"].ToString() : null,
+                Estado = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1"
             };
         }
 
-        public Response<Cosecha> Insertar(Cosecha entidad)
+        public Response<Ingresos> Insertar(Ingresos entidad)
         {
-            Response<Cosecha> response = new Response<Cosecha>();
-            string queryId = "SELECT SEQ_COSECHA.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO COSECHA (IDCOSECHA, IDSIEMBRA, CALIDADCOSECHADA, 
-                                   CANTIDADCOSECHADA, PRECIOVENTA, ESTADO) 
-                                   VALUES (:Id, :IdSiembra, :Calidad, :Cantidad, :Precio, :Estado)";
+            Response<Ingresos> response = new Response<Ingresos>();
+            string queryId = "SELECT SEQ_INGRESOS.NEXTVAL FROM DUAL";
+            string queryInsert = @"INSERT INTO INGRESOS (IDINGRESOS, IDSIEMBRA, FECHAINGRESOS, TIPO, CONCEPTO, MONTO, NOTA, ESTADO)
+                                   VALUES (:Id, :IdSiembra, :Fecha, :Tipo, :Concepto, :Monto, :Nota, :Estado)";
 
             OracleTransaction transaction = null;
 
@@ -50,25 +51,27 @@ namespace DAL
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("Id", nuevoId));
                     command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
-                    command.Parameters.Add(new OracleParameter("Calidad", entidad.CalidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Cantidad", entidad.CantidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Precio", entidad.PrecioVenta ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado));
+                    command.Parameters.Add(new OracleParameter("Fecha", entidad.FechaIngresos ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Concepto", OracleDbType.Clob) { Value = entidad.Concepto ?? (object)DBNull.Value });
+                    command.Parameters.Add(new OracleParameter("Monto", entidad.Monto ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Nota", OracleDbType.Clob) { Value = entidad.Nota ?? (object)DBNull.Value });
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
-                entidad.Id = nuevoId;
+                entidad.IdIngresos = nuevoId;
                 response.Estado = true;
-                response.Mensaje = "Cosecha registrada exitosamente";
+                response.Mensaje = "Ingreso registrado exitosamente";
                 response.Entidad = entidad;
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error al insertar cosecha: " + ex.Message;
+                response.Mensaje = "Error al insertar ingreso: " + ex.Message;
             }
             finally
             {
@@ -78,16 +81,18 @@ namespace DAL
             return response;
         }
 
-        public Response<Cosecha> Actualizar(Cosecha entidad)
+        public Response<Ingresos> Actualizar(Ingresos entidad)
         {
-            Response<Cosecha> response = new Response<Cosecha>();
-            string query = @"UPDATE COSECHA SET 
+            Response<Ingresos> response = new Response<Ingresos>();
+            string query = @"UPDATE INGRESOS SET
                              IDSIEMBRA = :IdSiembra,
-                             CALIDADCOSECHADA = :Calidad,
-                             CANTIDADCOSECHADA = :Cantidad,
-                             PRECIOVENTA = :Precio,
+                             FECHAINGRESOS = :Fecha,
+                             TIPO = :Tipo,
+                             CONCEPTO = :Concepto,
+                             MONTO = :Monto,
+                             NOTA = :Nota,
                              ESTADO = :Estado
-                             WHERE IDCOSECHA = :Id";
+                             WHERE IDINGRESOS = :Id";
 
             OracleTransaction transaction = null;
 
@@ -100,25 +105,27 @@ namespace DAL
                 {
                     command.Transaction = transaction;
                     command.Parameters.Add(new OracleParameter("IdSiembra", entidad.IdSiembra));
-                    command.Parameters.Add(new OracleParameter("Calidad", entidad.CalidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Cantidad", entidad.CantidadCosechada ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Precio", entidad.PrecioVenta ?? (object)DBNull.Value));
-                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado));
-                    command.Parameters.Add(new OracleParameter("Id", entidad.Id));
+                    command.Parameters.Add(new OracleParameter("Fecha", entidad.FechaIngresos ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Tipo", entidad.Tipo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Concepto", OracleDbType.Clob) { Value = entidad.Concepto ?? (object)DBNull.Value });
+                    command.Parameters.Add(new OracleParameter("Monto", entidad.Monto ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Nota", OracleDbType.Clob) { Value = entidad.Nota ?? (object)DBNull.Value });
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
+                    command.Parameters.Add(new OracleParameter("Id", entidad.IdIngresos));
 
                     command.ExecuteNonQuery();
                 }
 
                 transaction.Commit();
                 response.Estado = true;
-                response.Mensaje = "Cosecha actualizada exitosamente";
+                response.Mensaje = "Ingreso actualizado exitosamente";
                 response.Entidad = entidad;
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error al actualizar cosecha: " + ex.Message;
+                response.Mensaje = "Error al actualizar ingreso: " + ex.Message;
             }
             finally
             {
@@ -128,10 +135,10 @@ namespace DAL
             return response;
         }
 
-        public Response<Cosecha> Eliminar(int id)
+        public Response<Ingresos> Eliminar(int id)
         {
-            Response<Cosecha> response = new Response<Cosecha>();
-            string query = "UPDATE COSECHA SET ESTADO = '0' WHERE IDCOSECHA = :Id";
+            Response<Ingresos> response = new Response<Ingresos>();
+            string query = "UPDATE INGRESOS SET ESTADO = '0' WHERE IDINGRESOS = :Id";
 
             OracleTransaction transaction = null;
 
@@ -149,13 +156,13 @@ namespace DAL
 
                 transaction.Commit();
                 response.Estado = true;
-                response.Mensaje = "Cosecha eliminada exitosamente";
+                response.Mensaje = "Ingreso eliminado exitosamente";
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
                 response.Estado = false;
-                response.Mensaje = "Error al eliminar cosecha: " + ex.Message;
+                response.Mensaje = "Error al eliminar ingreso: " + ex.Message;
             }
             finally
             {
@@ -165,10 +172,10 @@ namespace DAL
             return response;
         }
 
-        public Response<Cosecha> ObtenerPorId(int id)
+        public Response<Ingresos> ObtenerPorId(int id)
         {
-            Response<Cosecha> response = new Response<Cosecha>();
-            string query = "SELECT * FROM COSECHA WHERE IDCOSECHA = :Id AND ESTADO = '1'";
+            Response<Ingresos> response = new Response<Ingresos>();
+            string query = "SELECT * FROM INGRESOS WHERE IDINGRESOS = :Id AND ESTADO = '1'";
 
             try
             {
@@ -183,13 +190,13 @@ namespace DAL
                         if (reader.Read())
                         {
                             response.Estado = true;
-                            response.Mensaje = "Cosecha encontrada";
+                            response.Mensaje = "Ingreso encontrado";
                             response.Entidad = Mapear(reader);
                         }
                         else
                         {
                             response.Estado = false;
-                            response.Mensaje = "Cosecha no encontrada";
+                            response.Mensaje = "Ingreso no encontrado";
                         }
                     }
                 }
@@ -197,7 +204,7 @@ namespace DAL
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error al obtener cosecha: " + ex.Message;
+                response.Mensaje = "Error al obtener ingreso: " + ex.Message;
             }
             finally
             {
@@ -207,11 +214,11 @@ namespace DAL
             return response;
         }
 
-        public Response<Cosecha> ObtenerTodos()
+        public Response<Ingresos> ObtenerTodos()
         {
-            Response<Cosecha> response = new Response<Cosecha>();
-            List<Cosecha> lista = new List<Cosecha>();
-            string query = "SELECT * FROM COSECHA WHERE ESTADO = '1' ORDER BY IDCOSECHA DESC";
+            Response<Ingresos> response = new Response<Ingresos>();
+            List<Ingresos> lista = new List<Ingresos>();
+            string query = "SELECT * FROM INGRESOS WHERE ESTADO = '1' ORDER BY FECHAINGRESOS DESC";
 
             try
             {
@@ -231,13 +238,13 @@ namespace DAL
                 response.Estado = true;
                 response.Lista = lista;
                 response.Mensaje = lista.Count > 0
-                    ? $"Se encontraron {lista.Count} cosechas"
-                    : "No hay cosechas registradas";
+                    ? $"Se encontraron {lista.Count} ingresos"
+                    : "No hay ingresos registrados";
             }
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error al obtener cosechas: " + ex.Message;
+                response.Mensaje = "Error al obtener ingresos: " + ex.Message;
             }
             finally
             {
@@ -247,21 +254,21 @@ namespace DAL
             return response;
         }
 
-        public Response<Cosecha> ObtenerPorSiembra(int idSiembra)
+        public Response<Ingresos> ObtenerPorSiembra(int idSiembra)
         {
-            Response<Cosecha> response = new Response<Cosecha>();
-            List<Cosecha> lista = new List<Cosecha>();
-            string query = "SELECT * FROM COSECHA WHERE IDSIEMBRA = :IdSiembra AND ESTADO = '1'";
+            Response<Ingresos> response = new Response<Ingresos>();
+            List<Ingresos> lista = new List<Ingresos>();
+            string query = "SELECT * FROM INGRESOS WHERE IDSIEMBRA = :IdSiembra AND ESTADO = '1' ORDER BY FECHAINGRESOS DESC";
 
             try
             {
                 AbrirConexion();
 
-                using (OracleCommand cmd = new OracleCommand(query, conexion))
+                using (OracleCommand command = new OracleCommand(query, conexion))
                 {
-                    cmd.Parameters.Add(new OracleParameter("IdSiembra", idSiembra));
+                    command.Parameters.Add(new OracleParameter("IdSiembra", idSiembra));
 
-                    using (OracleDataReader reader = cmd.ExecuteReader())
+                    using (OracleDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -273,13 +280,13 @@ namespace DAL
                 response.Estado = true;
                 response.Lista = lista;
                 response.Mensaje = lista.Count > 0
-                    ? $"Cosecha encontrada para la siembra"
-                    : "No hay cosecha registrada para esta siembra";
+                    ? $"Se encontraron {lista.Count} ingresos para esta siembra"
+                    : "Esta siembra no tiene ingresos registrados";
             }
             catch (Exception ex)
             {
                 response.Estado = false;
-                response.Mensaje = "Error al consultar cosecha por siembra: " + ex.Message;
+                response.Mensaje = "Error al obtener ingresos de la siembra: " + ex.Message;
             }
             finally
             {

@@ -10,28 +10,26 @@ namespace DAL
 {
     public class ParcelaRepository : ConexionOracle, IRepository<Parcela>
     {
-        private Parcela MapearDesdeReader(OracleDataReader reader)
+        private Parcela Mapear(OracleDataReader reader)
         {
             return new Parcela
             {
                 IdParcela = Convert.ToInt32(reader["IDPARCELA"]),
-                IdFinca = Convert.ToInt32(reader["IDFINCA"]),
-                IdCultivo = Convert.ToInt32(reader["IDCULTIVO"]),
+                IdUsuario = Convert.ToInt32(reader["IDUSUARIO"]),
+                Area = reader["AREA"] != DBNull.Value ? Convert.ToDecimal(reader["AREA"]) : (decimal?)null,
                 Nombre = reader["NOMBRE"] != DBNull.Value ? reader["NOMBRE"].ToString() : null,
-                AreaCalculada = reader["AREACALCULADA"] != DBNull.Value ? Convert.ToDecimal(reader["AREACALCULADA"]) : (decimal?)null,
-                Poligonos = reader["POLIGONOS"] != DBNull.Value ? reader["POLIGONOS"].ToString() : null,
+                PhSuelo = reader["PHSUELO"] != DBNull.Value ? Convert.ToDecimal(reader["PHSUELO"]) : (decimal?)null,
                 TipoSuelo = reader["TIPOSUELO"] != DBNull.Value ? reader["TIPOSUELO"].ToString() : null,
-                PhSuelo = reader["PHSUELO"] != DBNull.Value ? Convert.ToDecimal(reader["PHSUELO"]) : (decimal?)null
+                Estado = reader["ESTADO"] != DBNull.Value ? reader["ESTADO"].ToString() : "1"
             };
         }
 
         public Response<Parcela> Insertar(Parcela entidad)
         {
             Response<Parcela> response = new Response<Parcela>();
-
             string queryId = "SELECT SEQ_PARCELA.NEXTVAL FROM DUAL";
-            string queryInsert = @"INSERT INTO PARCELA (IDPARCELA, IDFINCA, IDCULTIVO, NOMBRE, AREACALCULADA, POLIGONOS, TIPOSUELO, PHSUELO) 
-                           VALUES (:Id, :IdFinca, :IdCultivo, :Nombre, :AreaCalculada, :Poligonos, :TipoSuelo, :PhSuelo)";
+            string queryInsert = @"INSERT INTO PARCELA (IDPARCELA, IDUSUARIO, AREA, NOMBRE, PHSUELO, TIPOSUELO, ESTADO) 
+                                   VALUES (:Id, :IdUsuario, :Area, :Nombre, :PhSuelo, :TipoSuelo, :Estado)";
 
             OracleTransaction transaction = null;
 
@@ -50,20 +48,14 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(queryInsert, conexion))
                 {
                     command.Transaction = transaction;
+                    command.Parameters.Add(new OracleParameter("Id", nuevoId));
+                    command.Parameters.Add(new OracleParameter("IdUsuario", entidad.IdUsuario));
+                    command.Parameters.Add(new OracleParameter("Area", entidad.Area ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
 
-                    var parametros = new OracleParameter[]
-                    {
-                        new OracleParameter("Id", nuevoId),
-                        new OracleParameter("IdFinca", entidad.IdFinca),
-                        new OracleParameter("IdCultivo", entidad.IdCultivo),
-                        new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value),
-                        new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value),
-                        new OracleParameter("Poligonos", OracleDbType.Clob) { Value = entidad.Poligonos ?? (object)DBNull.Value },
-                        new OracleParameter("TipoSuelo", OracleDbType.Varchar2) { Value = entidad.TipoSuelo ?? (object)DBNull.Value },
-                        new OracleParameter("PhSuelo", OracleDbType.Decimal) { Value = entidad.PhSuelo ?? (object)DBNull.Value }
-                    };
-
-                    command.Parameters.AddRange(parametros);
                     command.ExecuteNonQuery();
                 }
 
@@ -91,14 +83,13 @@ namespace DAL
         {
             Response<Parcela> response = new Response<Parcela>();
             string query = @"UPDATE PARCELA SET 
-                   IDFINCA = :IdFinca,
-                   IDCULTIVO = :IdCultivo,
-                   NOMBRE = :Nombre,
-                   AREACALCULADA = :AreaCalculada,
-                   POLIGONOS = :Poligonos,
-                   TIPOSUELO = :TipoSuelo,
-                   PHSUELO = :PhSuelo
-                   WHERE IDPARCELA = :Id";
+                             IDUSUARIO = :IdUsuario,
+                             AREA = :Area,
+                             NOMBRE = :Nombre,
+                             PHSUELO = :PhSuelo,
+                             TIPOSUELO = :TipoSuelo,
+                             ESTADO = :Estado
+                             WHERE IDPARCELA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -110,20 +101,14 @@ namespace DAL
                 using (OracleCommand command = new OracleCommand(query, conexion))
                 {
                     command.Transaction = transaction;
+                    command.Parameters.Add(new OracleParameter("IdUsuario", entidad.IdUsuario));
+                    command.Parameters.Add(new OracleParameter("Area", entidad.Area ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("PhSuelo", entidad.PhSuelo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("TipoSuelo", entidad.TipoSuelo ?? (object)DBNull.Value));
+                    command.Parameters.Add(new OracleParameter("Estado", entidad.Estado ?? "1"));
+                    command.Parameters.Add(new OracleParameter("Id", entidad.IdParcela));
 
-                    var parametros = new OracleParameter[]
-                    {
-                new OracleParameter("IdFinca", entidad.IdFinca),
-                new OracleParameter("IdCultivo", entidad.IdCultivo),
-                new OracleParameter("Nombre", entidad.Nombre ?? (object)DBNull.Value),
-                new OracleParameter("AreaCalculada", entidad.AreaCalculada ?? (object)DBNull.Value),
-                new OracleParameter("Poligonos", OracleDbType.Clob) { Value = entidad.Poligonos ?? (object)DBNull.Value },
-                new OracleParameter("TipoSuelo", OracleDbType.Varchar2) { Value = entidad.TipoSuelo ?? (object)DBNull.Value },
-                new OracleParameter("PhSuelo", OracleDbType.Decimal) { Value = entidad.PhSuelo ?? (object)DBNull.Value },
-                new OracleParameter("Id", entidad.IdParcela)
-                    };
-
-                    command.Parameters.AddRange(parametros);
                     command.ExecuteNonQuery();
                 }
 
@@ -149,7 +134,7 @@ namespace DAL
         public Response<Parcela> Eliminar(int id)
         {
             Response<Parcela> response = new Response<Parcela>();
-            string query = "DELETE FROM PARCELA WHERE IDPARCELA = :Id";
+            string query = "UPDATE PARCELA SET ESTADO = '0' WHERE IDPARCELA = :Id";
 
             OracleTransaction transaction = null;
 
@@ -186,7 +171,7 @@ namespace DAL
         public Response<Parcela> ObtenerPorId(int id)
         {
             Response<Parcela> response = new Response<Parcela>();
-            string query = "SELECT * FROM PARCELA WHERE IDPARCELA = :Id";
+            string query = "SELECT * FROM PARCELA WHERE IDPARCELA = :Id AND ESTADO = '1'";
 
             try
             {
@@ -202,7 +187,7 @@ namespace DAL
                         {
                             response.Estado = true;
                             response.Mensaje = "Parcela encontrada";
-                            response.Entidad = MapearDesdeReader(reader);
+                            response.Entidad = Mapear(reader);
                         }
                         else
                         {
@@ -229,7 +214,7 @@ namespace DAL
         {
             Response<Parcela> response = new Response<Parcela>();
             List<Parcela> listaParcelas = new List<Parcela>();
-            string query = "SELECT * FROM PARCELA ORDER BY IDPARCELA";
+            string query = "SELECT * FROM PARCELA WHERE ESTADO = '1' ORDER BY IDPARCELA";
 
             try
             {
@@ -241,7 +226,7 @@ namespace DAL
                     {
                         while (reader.Read())
                         {
-                            listaParcelas.Add(MapearDesdeReader(reader));
+                            listaParcelas.Add(Mapear(reader));
                         }
                     }
                 }
@@ -256,6 +241,48 @@ namespace DAL
             {
                 response.Estado = false;
                 response.Mensaje = "Error al obtener parcelas: " + ex.Message;
+            }
+            finally
+            {
+                CerrarConexion();
+            }
+
+            return response;
+        }
+
+        public Response<Parcela> ObtenerPorUsuario(int idUsuario)
+        {
+            Response<Parcela> response = new Response<Parcela>();
+            List<Parcela> listaParcelas = new List<Parcela>();
+            string query = "SELECT * FROM PARCELA WHERE IDUSUARIO = :IdUsuario AND ESTADO = '1' ORDER BY IDPARCELA";
+
+            try
+            {
+                AbrirConexion();
+
+                using (OracleCommand command = new OracleCommand(query, conexion))
+                {
+                    command.Parameters.Add(new OracleParameter("IdUsuario", idUsuario));
+
+                    using (OracleDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            listaParcelas.Add(Mapear(reader));
+                        }
+                    }
+                }
+
+                response.Estado = true;
+                response.Mensaje = listaParcelas.Count > 0
+                    ? $"Se encontraron {listaParcelas.Count} parcelas del usuario"
+                    : "El usuario no tiene parcelas registradas";
+                response.Lista = listaParcelas;
+            }
+            catch (Exception ex)
+            {
+                response.Estado = false;
+                response.Mensaje = "Error al obtener parcelas del usuario: " + ex.Message;
             }
             finally
             {

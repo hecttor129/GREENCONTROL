@@ -13,77 +13,66 @@ namespace ENTITY
         public int IdHistorial { get; set; }
 
         [Required]
-        [ForeignKey("Parcela")]
         [Column("IDPARCELA")]
         public int IdParcela { get; set; }
-
-        [Column("IDPARCELACOPY")]
-        public int IdParcelaCopy { get; set; }
-
-        [Column("FECHACOSECHA")]
-        public DateTime? FechaCosecha { get; set; }
 
         [Column("FECHASIEMBRA")]
         public DateTime? FechaSiembra { get; set; }
 
-        [Column("FECHAGERMINACION")]
-        public DateTime? FechaGerminacion { get; set; }
+        [Column("FECHACOSECHA")]
+        public DateTime? FechaCosecha { get; set; }
 
-        [Column("FECHAFLORACION")]
-        public DateTime? FechaFloracion { get; set; }
+        [Column("DIASGERMINACION")]
+        public int? DiasGerminacion { get; set; }
 
-        [Column("ETAPAACTUAL")]
-        [StringLength(25)]
-        public string? EtapaActual { get; set; }
+        [Column("DIASFLORACION")]
+        public int? DiasFloracion { get; set; }
+
+        [Required]
+        [Column("DURACIONCICLO")]
+        public int DuracionCiclo { get; set; }
 
         [Column("CALIDADCOSECHADA")]
         public int? CalidadCosechada { get; set; }
 
-        [Column("CANTIDADCOSECHADA")]
+        [Column("CANTIDADCOSECHADA", TypeName = "NUMBER(10,2)")]
         public decimal? CantidadCosechada { get; set; }
 
-        [Column("DURACIONCICLO")]
-        public int? DuracionCiclo { get; set; }
-
+        [Required]
         [Column("NOMBRECULTIVO")]
         [StringLength(40)]
         public string NombreCultivo { get; set; }
 
+        [Required]
         [Column("NOMBREPARCELA")]
         [StringLength(40)]
         public string NombreParcela { get; set; }
 
         [Column("TIPOSUELO")]
         [StringLength(30)]
-        public string TipoSuelo { get; set; }
+        public string? TipoSuelo { get; set; }
 
-        [Column("PHSUELO")]
+        [Column("PHSUELO", TypeName = "NUMBER(4,2)")]
         public decimal? PhSuelo { get; set; }
 
-        [Column("ESTADO")]
-        [StringLength(1)]
-        public string EstadoChar { get; set; }
+        [Column("ESTADO", TypeName = "CHAR(1)")]
+        public char Estado { get; set; } = '1';
 
-        [NotMapped]
-        public bool Estado
-        {
-            get => EstadoChar == "1";
-            set => EstadoChar = value ? "1" : "0";
-        }
-
-        [Column("COSTOTOTALPRODUCCION")]
+        [Column("COSTOTOTALPRODUCCION", TypeName = "NUMBER(12,2)")]
         public decimal? CostoTotalProduccion { get; set; }
 
-        [Column("INGRESOTOTAL")]
+        [Column("INGRESOTOTAL", TypeName = "NUMBER(12,2)")]
         public decimal? IngresoTotal { get; set; }
 
-        [Column("RENTABILIDADFINAL")]
+        [Column("RENTABILIDADFINAL", TypeName = "NUMBER(6,2)")]
         public decimal? RentabilidadFinal { get; set; }
 
         [Column("FECHASNAPSHOT")]
         public DateTime? FechaSnapshot { get; set; }
 
-        public virtual Parcela Parcela { get; set; }
+        // Relación con Parcela
+        [ForeignKey("IDPARCELA")]
+        public virtual Parcela? Parcela { get; set; }
 
         public Historial() { }
     }

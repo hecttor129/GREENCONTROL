@@ -12,9 +12,9 @@ namespace ENTITY
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Column("idParcela")]
+        [Column("idSiembra")]
         [Required]
-        public int IdParcela { get; set; }
+        public int IdSiembra { get; set; }
 
         [Column("calidadCosechada")]
         public int? CalidadCosechada { get; set; }
@@ -22,11 +22,16 @@ namespace ENTITY
         [Column("cantidadCosechada")]
         public decimal? CantidadCosechada { get; set; }
 
-        [Column("PrecioVentaUnitario")]
-        public decimal? PrecioVentaUnitario { get; set; }
+        [Column("PrecioVenta")]
+        public decimal? PrecioVenta { get; set; }
 
-        [ForeignKey("IdParcela")]
-        public virtual Parcela? Parcela { get; set; }
+        [Column("estado", TypeName = "CHAR(1)")]
+        [Required]
+        public char Estado { get; set; } = '1'; // Activo por defecto
+
+        // Relación
+        [ForeignKey("IdSiembra")]
+        public virtual Siembra? Siembra { get; set; }
     }
 }
 

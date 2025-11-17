@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace ENTITY
 {
-    [Table("TAREAS")]
-    public class Tareas
+    [Table("INGRESOS")]
+    public class Ingresos
     {
         [Key]
-        [Column("IDTAREA")]
+        [Column("IDINGRESOS")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int IdTarea { get; set; }
+        public int IdIngresos { get; set; }
 
         [Required]
         [Column("IDSIEMBRA")]
@@ -23,22 +23,21 @@ namespace ENTITY
         [ForeignKey("IdSiembra")]
         public virtual Siembra Siembra { get; set; }
 
+        [Column("FECHAINGRESOS")]
+        public DateTime? FechaIngresos { get; set; }
+
         [Column("TIPO")]
         [StringLength(20)]
         public string Tipo { get; set; }
 
-        [Required]
-        [Column("FECHATAREAPROGRAMADA")]
-        public DateTime FechaTareaProgramada { get; set; }
+        [Column("CONCEPTO")]
+        public string Concepto { get; set; }
 
-        [Column("FECHATAREATERMINADA")]
-        public DateTime? FechaTareaTerminada { get; set; }
+        [Column("MONTO", TypeName = "NUMBER(10,2)")]
+        public decimal? Monto { get; set; }
 
-        [Column("URGENCIA")]
-        public int? Urgencia { get; set; }
-
-        [Column("DESCRIPCIÓN")]
-        public string Descripcion { get; set; }
+        [Column("NOTA")]
+        public string Nota { get; set; }
 
         [Required]
         [Column("ESTADO")]
@@ -46,4 +45,3 @@ namespace ENTITY
         public string Estado { get; set; } = "1";
     }
 }
-

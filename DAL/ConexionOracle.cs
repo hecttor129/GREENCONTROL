@@ -12,7 +12,7 @@ namespace DAL
     public class ConexionOracle
     {
         private string cadenaConexion =
-            "User Id=Consultor_Parcela;Password=consultor123;Data Source=localhost:1521/xepdb1;";
+            "User Id=Consultor_GreenControl;Password=consultor123;Data Source=localhost:1521/xepdb1;";
 
         protected OracleConnection conexion;
 
